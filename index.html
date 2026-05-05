@@ -1,0 +1,1788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deposit for events — Prototype</title>
+<style>
+  :root {
+    --indigo: #4F46E5;
+    --indigo-dark: #3730A3;
+    --indigo-light: #EEF2FF;
+    --indigo-soft: #F5F3FF;
+    --bg: #FAFAFB;
+    --white: #FFFFFF;
+    --text: #0F0F0F;
+    --text-muted: #6B6B70;
+    --text-subtle: #9CA3AF;
+    --border: #E5E5E8;
+    --border-strong: #D4D4D8;
+    --success: #047857;
+    --success-bg: #D1FAE5;
+    --shadow-panel: -12px 0 32px rgba(15,15,15,0.08);
+    --shadow-menu: 0 4px 16px rgba(15,15,15,0.10);
+    --shadow-card: 0 1px 2px rgba(15,15,15,0.04);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--white); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--text); font-size: 14px; line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; cursor: pointer; background: none; border: none; color: inherit; }
+  input, select { font: inherit; color: inherit; }
+
+  .topnav { height: 56px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 16px; gap: 12px; background: var(--white); }
+  #topnav-closed-bill { background: #F4F5F7; }
+  #topnav-closed-bill .topnav-search { background: var(--white); }
+  .topnav-icon-btn { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); border-radius: 6px; }
+  .topnav-icon-btn:hover { background: var(--bg); }
+  .topnav-logo { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 19px; letter-spacing: 0.5px; padding: 0 8px; }
+  .topnav-logo-mini { font-weight: 800; font-size: 22px; padding: 0 4px; letter-spacing: -1px; }
+  .topnav-logo .pms { font-size: 10px; background: var(--text); color: var(--white); padding: 2px 6px; border-radius: 8px; font-weight: 600; letter-spacing: 0.5px; }
+  .topnav-search { flex: 1; max-width: 480px; height: 36px; background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 0 12px; display: flex; align-items: center; gap: 8px; color: var(--text-subtle); font-size: 13px; }
+  .topnav-search-suffix { margin-left: auto; padding: 2px 8px; background: var(--bg); border-radius: 4px; font-size: 11px; color: var(--text-muted); }
+  .topnav-actions { margin-left: auto; display: flex; align-items: center; gap: 2px; }
+  .topnav-action { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); position: relative; border-radius: 6px; }
+  .topnav-action:hover { background: var(--bg); }
+  .topnav-badge { position: absolute; top: 4px; right: 4px; background: var(--indigo); color: var(--white); font-size: 9px; font-weight: 600; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; }
+  .topnav-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #FCA5A5, #DC8A6E); margin-left: 8px; flex-shrink: 0; }
+  .topnav-plus { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; color: var(--text); margin-left: 8px; }
+
+  .pageheader { padding: 28px 40px 4px; max-width: 1480px; margin: 0 auto; width: 100%; display: flex; align-items: flex-start; justify-content: space-between; }
+  .pageheader h1 { font-size: 22px; font-weight: 600; line-height: 1.2; }
+  .pageheader-help { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); }
+
+  .tabs { display: flex; gap: 28px; border-bottom: 1px solid var(--border); padding: 12px 40px 0; max-width: 1480px; margin: 0 auto; width: 100%; }
+  .tab { padding: 8px 0 14px; font-size: 14px; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; }
+  .tab.active { color: var(--text); border-color: var(--indigo); }
+
+  .body { padding: 24px 40px 40px; max-width: 1480px; margin: 0 auto; width: 100%; }
+
+  .filter-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; gap: 16px; flex-wrap: wrap; }
+  .grouped-by { height: 38px; padding: 0 14px; border: 1px solid var(--border); border-radius: 8px; display: inline-flex; align-items: center; gap: 28px; font-size: 13px; min-width: 240px; cursor: pointer; }
+  .filter-actions { display: flex; align-items: center; gap: 10px; }
+  .collapse-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; padding: 0 8px; color: var(--text); cursor: pointer; }
+  .filter-search { width: 220px; height: 36px; padding: 0 12px 0 32px; border: 1px solid var(--border); border-radius: 8px; background: var(--white); font-size: 13px; position: relative; display: flex; align-items: center; }
+  .filter-search input { width: 100%; border: none; outline: none; background: transparent; font-size: 13px; }
+  .filter-search-icon { position: absolute; left: 11px; color: var(--text-subtle); display: flex; }
+  .filter-pill-btn { height: 36px; padding: 0 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--white); font-size: 13px; }
+
+  .section-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .section-title { display: flex; align-items: center; gap: 16px; }
+  .section-title h2 { font-size: 18px; font-weight: 600; }
+  .add-btn { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; font-size: 13px; cursor: pointer; }
+  .add-btn-icon { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border: 1px solid var(--border-strong); border-radius: 4px; }
+  .refund-tag { font-size: 13px; color: var(--text-muted); }
+  .refund-tag strong { color: var(--text); font-weight: 600; }
+
+  .bill-card { border: 1px solid var(--border); border-radius: 10px; background: var(--white); overflow: visible; }
+  .bill-header { display: grid; grid-template-columns: 1fr 140px 220px 36px 36px; align-items: center; gap: 16px; padding: 18px 20px; }
+  .bill-header-title { font-size: 14px; font-weight: 500; }
+  .bill-header-arrival { font-size: 12px; color: var(--text-muted); }
+  .bill-header-arrival strong { color: var(--text); font-size: 14px; font-weight: 400; display: block; margin-top: 2px; }
+  .refund-pill { background: var(--indigo-light); border-radius: 8px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; }
+  .refund-pill strong { font-weight: 500; }
+  .icon-btn { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--border); border-radius: 6px; color: var(--text-muted); }
+  .icon-btn-plain { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border: none; color: var(--text-muted); }
+
+  .bill-body { padding: 0 20px 20px; }
+  .bill-actions-row { display: grid; grid-template-columns: 1fr auto; align-items: center; padding: 14px 0; border-top: 1px solid var(--border); }
+  .bill-actions-left { display: flex; align-items: center; gap: 24px; }
+  .checkbox { width: 16px; height: 16px; border: 1px solid var(--border-strong); border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .checkbox-label { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text); }
+  .preview-btn { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--white); font-size: 13px; }
+
+  .payment-row-wrap { position: relative; }
+  .payment-row { display: grid; grid-template-columns: 16px auto 1fr auto auto; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--border); }
+  .payment-row .badge { background: var(--indigo-light); color: var(--indigo-dark); padding: 3px 10px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+  .payment-row-label { font-size: 13px; color: var(--text); }
+  .payment-row-meta { color: var(--text-muted); font-size: 13px; margin-left: 4px; }
+  .payment-row-amount { font-size: 13px; font-weight: 400; }
+  .payment-row .more-btn { width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); border-radius: 4px; }
+  .payment-row .more-btn:hover { background: var(--bg); }
+
+  .deposit-row-wrap { position: relative; }
+  .deposit-row { display: grid; grid-template-columns: 16px 1fr auto 28px; gap: 12px; align-items: center; padding: 14px 0; border-top: 1px solid var(--border); }
+  .deposit-row-content { font-size: 13px; color: var(--text); }
+  .deposit-row-content .meta { color: var(--text-muted); margin: 0 6px; }
+  .deposit-row-amount { font-size: 13px; color: var(--text); }
+  .deposit-row-chevron { width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); border-radius: 4px; cursor: pointer; }
+  .deposit-row-chevron:hover { background: var(--bg); color: var(--text); }
+
+  .bill-side-actions { display: flex; flex-direction: column; gap: 10px; min-width: 200px; align-items: stretch; padding-top: 20px; padding-left: 24px; border-left: 1px solid var(--border); margin-left: 24px; }
+  .split-btn { display: flex; align-items: center; height: 36px; border: 1px solid var(--border); border-radius: 8px; background: var(--white); overflow: hidden; }
+  .split-btn-main { flex: 1; padding: 0 14px; font-size: 13px; height: 100%; display: inline-flex; align-items: center; gap: 6px; }
+  .split-btn-main:hover { background: var(--bg); }
+  .split-btn-divider { width: 1px; background: var(--border); height: 100%; }
+  .split-btn-arrow { width: 32px; height: 100%; display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); }
+  .split-btn-arrow:hover { background: var(--bg); }
+
+  .dropdown-menu { position: absolute; background: var(--white); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow-menu); padding: 6px; min-width: 200px; z-index: 50; }
+  .dropdown-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+  .dropdown-item:hover { background: var(--bg); }
+  .dropdown-item-icon { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; color: var(--text-muted); }
+
+  .subtabs { display: inline-flex; padding: 4px; background: var(--bg); border-radius: 10px; margin-bottom: 24px; }
+  .subtab { padding: 6px 16px; border-radius: 6px; font-size: 13px; color: var(--text-muted); cursor: pointer; }
+  .subtab.active { background: var(--white); color: var(--text); box-shadow: var(--shadow-card); }
+
+  .payments-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .payments-header h2 { font-size: 22px; font-weight: 600; }
+
+  .payments-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+  .payments-table th { text-align: left; font-weight: 400; color: var(--text); font-size: 13px; padding: 14px 12px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--white); }
+  .payments-table td { padding: 14px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .payments-table .col-actions { width: 40px; text-align: right; position: relative; }
+  .payments-table .status-pill { display: inline-flex; align-items: center; padding: 3px 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 12px; }
+  .payments-table .link-cell { color: var(--indigo); text-decoration: underline; }
+  .payments-table .meta-line { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  .scrim { position: fixed; inset: 0; background: rgba(15,15,15,0.32); opacity: 0; pointer-events: none; transition: opacity 0.2s; z-index: 80; }
+  .scrim.show { opacity: 1; pointer-events: auto; }
+  .panel { position: fixed; top: 16px; right: 16px; bottom: 16px; width: 480px; background: var(--white); border-radius: 16px; box-shadow: var(--shadow-panel); transform: translateX(calc(100% + 24px)); transition: transform 0.25s ease-out; z-index: 90; display: flex; flex-direction: column; overflow: hidden; }
+  .panel.open { transform: translateX(0); }
+  .panel-header { padding: 20px 24px 14px; display: flex; align-items: center; gap: 14px; }
+  .panel-close { width: 28px; height: 28px; border: 1px solid var(--border); border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; color: var(--text); }
+  .panel-close:hover { background: var(--bg); }
+  .panel-title { font-size: 20px; font-weight: 600; }
+  .panel-body { flex: 1; overflow-y: auto; padding: 0 24px 20px; }
+  .panel-explainer { font-size: 14px; color: var(--text); line-height: 1.55; margin-bottom: 22px; }
+  .panel-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; gap: 8px; }
+
+  .field { margin-bottom: 18px; }
+  .field-label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; color: var(--text); }
+  .field-required::after { content: " *"; }
+  .field-helper { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+  .input { width: 100%; height: 40px; padding: 0 12px; border: 1px solid var(--border-strong); border-radius: 8px; font-size: 14px; background: var(--white); color: var(--text); display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+  .input.text-input { padding: 0; }
+  .input.text-input input { width: 100%; height: 100%; padding: 0 12px; border: none; outline: none; background: transparent; font-size: 14px; color: var(--text); border-radius: 8px; }
+  .input.text-input input::placeholder { color: var(--text-subtle); }
+  .input.search-input { padding: 0 12px; gap: 8px; cursor: text; }
+  .input.search-input input { flex: 1; border: none; outline: none; background: transparent; font-size: 14px; color: var(--text); padding: 0; height: 100%; min-width: 0; }
+  .input.search-input input::placeholder { color: var(--text-subtle); }
+  .input.search-input .chevron { color: var(--text-muted); cursor: pointer; flex-shrink: 0; }
+  .input.placeholder > span:first-child { color: var(--text-subtle); }
+  .input.has-value { color: var(--text); }
+  .input:hover { border-color: var(--text-subtle); }
+  .input.focused { border-color: var(--indigo); box-shadow: 0 0 0 3px var(--indigo-light); }
+  .input.search-input:focus-within { border-color: var(--indigo); box-shadow: 0 0 0 3px var(--indigo-light); }
+  .input-row { display: grid; gap: 10px; }
+  .input-row.cols-2 { grid-template-columns: 2fr 1fr; }
+  .input-clear-chevron { display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); }
+  .input-clear-chevron span { cursor: pointer; }
+  .panel-divider { border-top: 1px solid var(--border); margin: 6px 0 18px; }
+  .balance-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; padding: 4px 0; }
+  .balance-row .lbl { font-size: 14px; color: var(--text); }
+  .balance-row .val { font-size: 14px; font-weight: 500; }
+
+  .vat-row { display: grid; grid-template-columns: 2fr 1fr 28px; gap: 10px; align-items: center; margin-bottom: 8px; }
+  .vat-amount { display: flex; align-items: center; gap: 8px; height: 40px; border: 1px solid var(--border-strong); border-radius: 8px; padding: 0 12px; font-size: 14px; background: var(--white); }
+  .vat-amount .ccy { color: var(--text); }
+  .vat-amount .val { flex: 1; text-align: right; }
+  .vat-amount input { flex: 1; border: none; outline: none; background: transparent; text-align: right; font-size: 14px; min-width: 0; padding: 0; color: var(--text); }
+  .vat-amount.locked { background: var(--bg); color: var(--text-muted); }
+  .vat-amount.locked .val { color: var(--text-muted); }
+  .vat-amount.error { border-color: #DC2626; box-shadow: 0 0 0 1px #DC2626; }
+  .vat-error-icon { width: 18px; height: 18px; border-radius: 50%; background: #DC2626; color: var(--white); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; font-weight: 700; line-height: 1; }
+  .error-banner { background: #FEE2E2; border-radius: 8px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px; margin-bottom: 16px; }
+  .error-banner-icon { width: 20px; height: 20px; border-radius: 50%; background: #DC2626; color: var(--white); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 13px; font-weight: 700; line-height: 1; margin-top: 1px; }
+  .error-banner-text { font-size: 14px; color: #991B1B; line-height: 1.5; }
+  .vat-rate { height: 40px; border: 1px solid var(--border-strong); border-radius: 8px; padding: 0 12px; font-size: 14px; display: flex; align-items: center; justify-content: space-between; background: var(--white); cursor: pointer; }
+  .vat-rate:hover { border-color: var(--text-subtle); }
+  .vat-del { background: transparent; color: var(--text-muted); font-size: 16px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+  .vat-del:disabled { opacity: 0.3; cursor: not-allowed; }
+  .add-vat { color: var(--text); font-size: 13px; padding: 8px 0; display: inline-flex; align-items: center; gap: 8px; margin-top: 4px; }
+  .add-vat-icon { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border: 1px solid var(--border-strong); border-radius: 4px; font-size: 13px; }
+
+  .panel.edit-mode .vat-rate { pointer-events: none; cursor: default; background: var(--bg); color: var(--text-muted); }
+  .panel.edit-mode .vat-amount { background: var(--bg); color: var(--text-muted); }
+  .panel.edit-mode .vat-amount input { color: var(--text-muted); pointer-events: none; }
+  .panel.edit-mode #add-vat-btn { display: none !important; }
+  .panel.edit-mode .vat-del { display: none; }
+  .panel.edit-mode .vat-row { grid-template-columns: 2fr 1fr; }
+
+  .link-options { display: flex; flex-direction: column; margin-bottom: 18px; }
+  .radio-section { margin-bottom: 16px; }
+  .radio-section:last-child { margin-bottom: 0; }
+  .radio-nested { margin-top: 12px; }
+  .input.text-input input:read-only { cursor: default; }
+  .input.readonly { background: var(--white); }
+  .radio-item { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 4px 0; }
+  .radio-item .dot { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--border-strong); flex-shrink: 0; position: relative; box-sizing: border-box; }
+  .radio-item:hover .dot { border-color: var(--text-muted); }
+  .radio-item.active .dot { border-color: var(--indigo); border-width: 1.5px; }
+  .radio-item.active .dot::after { content: ""; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 10px; height: 10px; border-radius: 50%; background: var(--indigo); }
+  .radio-item .lbl { font-size: 14px; color: var(--text); }
+
+  .btn { height: 40px; padding: 0 18px; border-radius: 8px; font-size: 14px; font-weight: 500; border: 1px solid var(--border-strong); background: var(--white); color: var(--text); display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+  .btn:hover { background: var(--bg); }
+  .btn-primary { background: var(--indigo); color: var(--white); border-color: var(--indigo); }
+  .btn-primary:hover:not(:disabled) { background: var(--indigo-dark); border-color: var(--indigo-dark); }
+  .btn-primary:disabled { background: #C7C9D1; border-color: #C7C9D1; color: var(--white); cursor: not-allowed; opacity: 1; }
+
+  .popover { position: fixed; background: var(--white); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow-menu); z-index: 300; }
+
+  .calendar-popover { width: 280px; padding: 12px; }
+  .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 0 4px; }
+  .cal-nav { width: 28px; height: 28px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; color: var(--text-muted); }
+  .cal-nav:hover { background: var(--bg); color: var(--text); }
+  .cal-month { font-weight: 500; font-size: 14px; }
+  .calendar-dow { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 4px; }
+  .calendar-dow span { text-align: center; font-size: 11px; color: var(--text-muted); padding: 4px; font-weight: 500; }
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .cal-day { height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  .cal-day:hover:not(.other-month) { background: var(--bg); }
+  .cal-day.other-month { color: var(--text-subtle); cursor: default; }
+  .cal-day.other-month:hover { background: transparent; }
+  .cal-day.selected { background: var(--indigo); color: var(--white); font-weight: 500; }
+  .cal-day.selected:hover { background: var(--indigo-dark); }
+
+  .rate-popover { padding: 6px; min-width: 120px; }
+  .rate-item { padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+  .rate-item:hover { background: var(--bg); }
+  .rate-item.selected { background: var(--indigo-light); color: var(--indigo-dark); font-weight: 500; }
+
+  .reservation-popover { padding: 6px; min-width: 320px; }
+  .reservation-item { padding: 10px 12px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+  .reservation-item:hover { background: var(--bg); }
+  .reservation-item.selected { background: var(--indigo-light); color: var(--indigo-dark); }
+  .reservation-item .res-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .reservation-item.selected .res-meta { color: var(--indigo-dark); opacity: 0.8; }
+
+  .block-popover { padding: 6px; min-width: 380px; }
+  .popover-section-header { font-size: 12px; color: var(--text-muted); padding: 10px 12px 6px; }
+  .popover-section + .popover-section { border-top: 1px solid var(--border); margin-top: 4px; }
+  .block-item { padding: 10px 12px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+  .block-item:hover { background: var(--bg); }
+  .block-item.selected { background: var(--indigo-light); color: var(--indigo-dark); }
+
+  .toast { position: fixed; top: 20px; right: 24px; background: var(--white); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow-menu); padding: 14px 16px; max-width: 380px; min-width: 320px; display: flex; gap: 12px; align-items: flex-start; z-index: 400; transform: translateY(-20px); opacity: 0; transition: transform 0.25s ease-out, opacity 0.25s ease-out; pointer-events: none; }
+  .toast.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
+  .toast-icon { width: 28px; height: 28px; border-radius: 50%; background: var(--success-bg); color: var(--success); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .toast-body { flex: 1; }
+  .toast-title { font-weight: 500; font-size: 14px; color: var(--text); }
+  .toast-msg { font-size: 13px; color: var(--text-muted); margin-top: 2px; line-height: 1.5; }
+  .toast-close { color: var(--text-muted); font-size: 18px; padding: 0 4px; line-height: 1; align-self: flex-start; }
+
+  .block-page { max-width: 1480px; margin: 0 auto; padding: 0 32px 40px; }
+  .block-page-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0 24px; }
+  .block-page-crumbs { display: flex; align-items: center; gap: 12px; font-size: 18px; }
+  .back-arrow { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; color: var(--text); background: transparent; border: none; cursor: pointer; font-size: 18px; }
+  .back-arrow:hover { background: var(--bg); border-radius: 6px; }
+  .block-page-crumbs .crumb-link { color: var(--text-muted); text-decoration: none; font-size: 18px; }
+  .block-page-crumbs .crumb-separator { color: var(--text-muted); }
+  .block-page-crumbs .crumb-current { color: var(--text); font-weight: 600; font-size: 18px; }
+  .block-page-actions { display: flex; gap: 8px; }
+  .block-page-actions .icon-btn { width: 36px; height: 36px; background: var(--white); cursor: pointer; }
+  .block-page-actions .icon-btn:hover { background: var(--bg); }
+
+  .block-card { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 24px 28px; margin-bottom: 16px; }
+  .block-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .block-card-title-area { display: flex; align-items: center; gap: 12px; }
+  .block-card h3 { font-size: 18px; font-weight: 600; }
+  .status-confirmed-pill { display: inline-flex; padding: 4px 10px; background: var(--indigo-light); color: var(--indigo-dark); border-radius: 4px; font-size: 12px; font-weight: 500; }
+  .block-card-actions { display: flex; gap: 8px; align-items: center; }
+  .icon-btn-sm { width: 32px; height: 32px; border: 1px solid var(--border); border-radius: 6px; background: var(--white); display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); cursor: pointer; }
+  .icon-btn-sm:hover { background: var(--bg); }
+  .btn-outline { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--white); font-size: 13px; cursor: pointer; }
+  .btn-outline:hover { background: var(--bg); }
+  .btn-primary-sm { background: var(--indigo); color: var(--white); border: none; height: 32px; padding: 0 14px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+  .status-occupancy { color: var(--text-muted); font-size: 14px; margin-bottom: 20px; }
+
+  .block-stat-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+  .block-stat-card { padding: 16px 20px; background: var(--bg); border-radius: 10px; }
+  .block-stat-card.filled { background: var(--indigo-soft); }
+  .bs-label { font-size: 14px; color: var(--text); margin-bottom: 6px; }
+  .bs-value { font-size: 22px; font-weight: 500; }
+  .bs-value-row { display: flex; align-items: center; justify-content: space-between; }
+  .bs-value-row .bs-value { font-size: 22px; font-weight: 500; }
+
+  .block-status-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid var(--border); }
+  .footer-left { display: flex; align-items: center; gap: 14px; }
+  .footer-right { display: flex; align-items: center; gap: 12px; }
+  .muted-label { font-size: 14px; color: var(--text-muted); }
+  .link-underline { color: var(--text); text-decoration: underline; }
+  .link-arrow { color: var(--text); text-decoration: none; font-size: 14px; }
+  .bold-3 { font-weight: 600; font-size: 14px; }
+
+  .settings-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; margin-top: 20px; margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+  .setting-cell { padding: 14px 16px; background: var(--bg); border-radius: 8px; min-height: 64px; display: flex; flex-direction: column; justify-content: center; }
+  .setting-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+  .setting-value { font-size: 14px; color: var(--text); }
+
+  .block-matrix { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .block-matrix th { text-align: left; font-weight: 500; padding: 14px 12px; vertical-align: top; }
+  .block-matrix th:first-child { padding-left: 4px; }
+  .block-matrix td { padding: 18px 12px; border-top: 1px solid var(--border); vertical-align: top; }
+  .block-matrix td:first-child { padding-left: 4px; }
+  .matrix-summary-row td { color: var(--text); }
+  .muted-line { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  .closed-bill-page { max-width: 1480px; margin: 0 auto; padding: 0 32px 40px; background: var(--white); }
+  .closed-bill-header { display: flex; justify-content: space-between; align-items: center; padding: 24px 0 28px; }
+  .closed-bill-title-area { display: flex; gap: 16px; align-items: baseline; }
+  .closed-bill-title-area h1 { font-size: 24px; font-weight: 600; line-height: 1.2; }
+  .closed-bill-title-area .substatus { color: var(--text); font-size: 18px; font-weight: 400; }
+  .closed-bill-actions { display: flex; gap: 8px; }
+  .closed-bill-actions .icon-btn { width: 36px; height: 36px; background: var(--white); cursor: pointer; }
+  .closed-bill-actions .icon-btn:hover { background: var(--bg); }
+  .closed-bill-back { display: inline-flex; align-items: center; gap: 6px; padding: 8px 0; font-size: 12px; color: var(--text-muted); cursor: pointer; }
+  .closed-bill-back:hover { color: var(--text); }
+  .closed-bill-body { display: grid; grid-template-columns: 1fr 380px; gap: 24px; align-items: start; }
+  .closed-bill-main { background: transparent; border: none; padding: 0; }
+  .closed-bill-table { width: 100%; border-collapse: collapse; }
+  .closed-bill-table th { text-align: left; font-weight: 500; font-size: 14px; padding: 10px 0; color: var(--text); }
+  .closed-bill-table th:first-child { padding-left: 4px; }
+  .closed-bill-table th.col-amount { text-align: right; padding-right: 4px; }
+  .closed-bill-table td { padding: 18px 0; font-size: 14px; color: var(--text); border-top: 1px solid var(--border); }
+  .closed-bill-table td:first-child { padding-left: 4px; }
+  .closed-bill-table td.col-amount { text-align: right; padding-right: 4px; }
+  .closed-bill-divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+  .closed-bill-sidebar { display: flex; flex-direction: column; gap: 16px; }
+  .closed-bill-card { background: var(--white); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; }
+  .closed-bill-card h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+  .balance-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: var(--success-bg); color: var(--success); border-radius: 4px; font-size: 12px; font-weight: 500; }
+  .balance-pill svg { width: 14px; height: 14px; }
+  .card-label { font-size: 14px; color: var(--text); margin-bottom: 4px; }
+  .card-value-row { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+  .card-value { font-size: 28px; font-weight: 500; letter-spacing: -0.5px; }
+  .info-rows { display: flex; flex-direction: column; margin-top: 8px; }
+  .info-row { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 0; border-top: 1px solid var(--border); font-size: 14px; }
+  .info-row:first-child { border-top: none; padding-top: 8px; }
+  .info-row .info-label { color: var(--text); }
+  .info-row .info-value { color: var(--text); text-align: right; display: inline-flex; align-items: center; gap: 6px; }
+  .info-row .info-value a { color: var(--text); text-decoration: none; }
+  .info-row .info-value-link { color: var(--text); text-decoration: underline; cursor: pointer; }
+  .view-emails { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding-top: 14px; margin-top: 4px; border-top: 1px solid var(--border); cursor: pointer; font-size: 14px; }
+
+  .tester { position: fixed; bottom: 16px; left: 16px; background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 14px; box-shadow: var(--shadow-menu); z-index: 200; min-width: 280px; font-size: 13px; }
+  .tester .t-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 10px; }
+  .tester .t-row:last-child { margin-bottom: 0; }
+  .tester .t-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .tester select { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; background: var(--white); }
+  .tester .t-step { font-size: 12px; color: var(--text-muted); }
+  .tester button.t-reset { font-size: 12px; padding: 6px 10px; height: auto; }
+  .tester .t-banner { font-size: 11px; color: var(--text-muted); margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--border); line-height: 1.5; }
+
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+
+<nav class="topnav" id="topnav-main">
+  <button class="topnav-icon-btn" title="Menu">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+  </button>
+  <div class="topnav-logo">MEWS<span class="pms">PMS</span></div>
+  <div class="topnav-search">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+    Search within the Emblem prague
+  </div>
+  <div class="topnav-actions">
+    <button class="topnav-action" title="Sort"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 4v16M3 8l4-4 4 4M17 4v16M21 16l-4 4-4-4"/></svg></button>
+    <button class="topnav-action" title="Add"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="16" height="16" rx="3"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></button>
+    <button class="topnav-action" title="Calendar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></svg></button>
+    <button class="topnav-action" title="Notifications"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21h4"/></svg><span class="topnav-badge">2</span></button>
+    <button class="topnav-action" title="Messages"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg><span class="topnav-badge">4</span></button>
+    <button class="topnav-action" title="Help"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></button>
+    <button class="topnav-action" title="Announcements"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 11l18-7v16L3 13z"/><path d="M11 13v4a3 3 0 0 1-6 0v-3"/></svg><span class="topnav-badge">3</span></button>
+    <div class="topnav-avatar"></div>
+  </div>
+</nav>
+
+<nav class="topnav" id="topnav-closed-bill" hidden>
+  <div class="topnav-logo-mini">M</div>
+  <button class="topnav-icon-btn" title="Menu">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+  </button>
+  <div class="topnav-search" style="max-width: 380px;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg>
+    Search within the Emblem Prague
+    <span class="topnav-search-suffix">⌥F</span>
+  </div>
+  <div class="topnav-actions">
+    <button class="topnav-action" title="Sort"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 4v16M3 8l4-4 4 4M17 4v16M21 16l-4 4-4-4"/></svg></button>
+    <button class="topnav-action" title="Tasks"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></button>
+    <button class="topnav-action" title="Messages"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg><span class="topnav-badge">1</span></button>
+    <button class="topnav-action" title="Notifications"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21h4"/></svg><span class="topnav-badge">12</span></button>
+    <button class="topnav-plus" title="Add">+</button>
+  </div>
+</nav>
+
+<div class="pageheader" id="pageheader-main">
+  <h1>Tom Hanks</h1>
+  <button class="pageheader-help">?</button>
+</div>
+
+<div class="tabs" id="tabs-main">
+  <span class="tab">Dashboard</span>
+  <span class="tab">Profile</span>
+  <span class="tab">Internals</span>
+  <span class="tab" id="tab-payments" onclick="switchEntry('payments')">Payments</span>
+  <span class="tab active" id="tab-billing" onclick="switchEntry('billing')">Billing</span>
+  <span class="tab">Action log</span>
+</div>
+
+<main class="body" id="entry-billing">
+  <div class="filter-bar">
+    <div class="grouped-by">
+      <span>Grouped by reservation</span>
+      <span style="color: var(--text-muted);">▾</span>
+    </div>
+    <div class="filter-actions">
+      <span class="collapse-link">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+        Collapse all bills
+      </span>
+      <div class="filter-search">
+        <span class="filter-search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg></span>
+        <input placeholder="Search">
+      </div>
+      <button class="filter-pill-btn">Closed bills</button>
+      <button class="filter-pill-btn">Unpaid invoices</button>
+    </div>
+  </div>
+
+  <div class="section-row">
+    <div class="section-title">
+      <h2>Owned bills</h2>
+      <span class="add-btn"><span class="add-btn-icon">+</span>Add bill</span>
+    </div>
+    <span class="refund-tag">To be refunded <strong id="bill-refund-total">€100,00</strong></span>
+  </div>
+
+  <div class="bill-card">
+    <div style="display: grid; grid-template-columns: 1fr 240px;">
+      <div>
+        <div class="bill-header" style="border-bottom: 1px solid var(--border);">
+          <div class="bill-header-title">Open bill (Tom Hanks)</div>
+          <div class="bill-header-arrival">Arrival<strong>-</strong></div>
+          <div class="refund-pill" id="bill-refund-pill"><span>To be refund</span><strong>€300,00</strong></div>
+          <button class="icon-btn">⋮</button>
+          <button class="icon-btn-plain">▾</button>
+        </div>
+        <div style="padding: 16px 20px;">
+          <div class="bill-actions-row" style="border-top: none; padding-top: 0; padding-bottom: 14px;">
+            <div class="bill-actions-left">
+              <span class="checkbox-label"><span class="checkbox"></span>Select all</span>
+              <span class="add-btn"><span class="add-btn-icon">+</span>Add product</span>
+            </div>
+          </div>
+
+          <div class="payment-row-wrap" id="original-payment-wrap">
+            <div class="payment-row" id="original-payment-row">
+              <span class="checkbox"></span>
+              <span class="badge">Charged</span>
+              <span><span class="payment-row-label">External payment</span><span class="payment-row-meta">— Bank charges</span></span>
+              <span class="payment-row-amount">€300,00</span>
+              <button class="more-btn" id="billing-more-btn" onclick="toggleBillingMenu(event)">⋮</button>
+            </div>
+            <div class="dropdown-menu" id="billing-menu" hidden style="top: 38px; right: 0;">
+              <div class="dropdown-item">
+                <span class="dropdown-item-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                </span>
+                Payment details
+              </div>
+              <div class="dropdown-item" onclick="openDeposit()">
+                <span class="dropdown-item-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                </span>
+                Log as deposit
+              </div>
+            </div>
+          </div>
+
+          <div class="deposit-row-wrap" id="deposit-row-wrap" hidden>
+            <div class="deposit-row" id="deposit-row">
+              <span class="checkbox"></span>
+              <span class="deposit-row-content">Deposit<span class="meta">—</span><span id="deposit-row-desc">Wedding deposit</span><span class="meta">—</span><span id="deposit-row-date">05/07/2026</span><span class="meta">—</span><span>1x</span></span>
+              <span class="deposit-row-amount" id="deposit-row-amount">-€300,00</span>
+              <button class="deposit-row-chevron" onclick="toggleDepositMenu(event)">▾</button>
+            </div>
+            <div class="dropdown-menu" id="deposit-menu" hidden style="top: 50px; right: 24px;">
+              <div class="dropdown-item">
+                <span class="dropdown-item-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+                </span>
+                Action log
+              </div>
+              <div class="dropdown-item" onclick="editStartDate()">
+                <span class="dropdown-item-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                </span>
+                Edit start date
+              </div>
+              <div class="dropdown-item" onclick="viewBillWithDeposit()">
+                <span class="dropdown-item-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </span>
+                View bill with deposit
+              </div>
+              <div class="dropdown-item" id="deposit-menu-view-block" hidden onclick="viewAvailabilityBlock()">
+                <span class="dropdown-item-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="4" x2="9" y2="20"/></svg>
+                </span>
+                View availability block
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="bill-side-actions">
+        <button class="preview-btn" style="justify-content: center;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Preview bill
+        </button>
+        <div class="split-btn">
+          <button class="split-btn-main">Process payment</button>
+          <span class="split-btn-divider"></span>
+          <button class="split-btn-arrow">▾</button>
+        </div>
+        <div class="split-btn">
+          <button class="split-btn-main">Issue invoice</button>
+          <span class="split-btn-divider"></span>
+          <button class="split-btn-arrow">▾</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<main class="body" id="entry-payments" hidden>
+  <div class="subtabs">
+    <span class="subtab active">Overview</span>
+    <span class="subtab">Requests</span>
+    <span class="subtab">Methods</span>
+    <span class="subtab">Recurring</span>
+  </div>
+  <div class="payments-header">
+    <h2>Payments</h2>
+    <div class="split-btn">
+      <button class="split-btn-main"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 11h20"/></svg>Process payment</button>
+      <span class="split-btn-divider"></span>
+      <button class="split-btn-arrow">▾</button>
+    </div>
+  </div>
+  <div style="border: 1px solid var(--border); border-radius: 10px; overflow: visible; background: var(--white);">
+    <table class="payments-table">
+      <thead>
+        <tr>
+          <th>Type</th><th>Identifier</th><th>Created</th><th>Cashier</th><th>Bill</th><th>Notes</th><th>Status</th><th>Value</th>
+          <th class="col-actions">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Card payment<div class="meta-line">(Visa ****1111)</div></td><td>—</td>
+          <td>5/12/2025 9:00:00<div class="meta-line">John Preston</div></td>
+          <td>Main Cashier</td><td><span class="link-cell">Reservation #: 87652</span></td>
+          <td>—</td><td><span class="status-pill">Settled</span></td><td>€ 4.61</td>
+          <td class="col-actions"><button class="more-btn">⋮</button></td>
+        </tr>
+        <tr id="payments-deposit-row-target">
+          <td>Card payment<div class="meta-line">(Visa ****1111)</div></td><td>ch_3SD4fdK...</td>
+          <td>30/01/2025 8:00:00<div class="meta-line">Amy Smith</div></td>
+          <td>Main Cashier</td><td><span class="link-cell">Bill 34</span></td>
+          <td>—</td><td><span class="status-pill">Settled</span></td><td>—</td>
+          <td class="col-actions">
+            <button class="more-btn" id="payments-more-btn" onclick="togglePaymentsMenu(event)">⋮</button>
+            <div class="dropdown-menu" id="payments-menu" hidden style="top: 38px; right: 8px;">
+              <div class="dropdown-item">
+                <span class="dropdown-item-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+                Link to invoice
+              </div>
+              <div class="dropdown-item" onclick="openDeposit()">
+                <span class="dropdown-item-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span>
+                Log as deposit
+              </div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>External payment Cash</td><td>—</td>
+          <td>27/04/2025 19:30:00<div class="meta-line">John Preston</div></td>
+          <td>Main Cashier</td><td>Bill Counter 1234</td><td>—</td><td></td><td></td>
+          <td class="col-actions"><button class="more-btn">⋮</button></td>
+        </tr>
+        <tr>
+          <td>External payment Cash</td><td>—</td>
+          <td>10/6/13<div class="meta-line">Amy Smith</div></td>
+          <td>Main Cashier</td><td>Bill Counter 5678</td><td>—</td><td></td>
+          <td>€ 19.86</td>
+          <td class="col-actions"><button class="more-btn">⋮</button></td>
+        </tr>
+        <tr>
+          <td>Cash payment</td><td>ch_3SD4fdK...</td>
+          <td>12/4/17<div class="meta-line">Amy Smith</div></td>
+          <td>Main Cashier</td><td><span class="link-cell">Reservation #: 13652</span></td>
+          <td>—</td><td></td>
+          <td>€ 27.34</td>
+          <td class="col-actions"><button class="more-btn">⋮</button></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<main class="block-page" id="entry-availability-block" hidden>
+  <div class="block-page-header">
+    <div class="block-page-crumbs">
+      <button class="back-arrow" onclick="backToBill()">←</button>
+      <a href="#" class="crumb-link">Availability blocks</a>
+      <span class="crumb-separator">/</span>
+      <span class="crumb-current" id="block-page-name">Laura block</span>
+    </div>
+    <div class="block-page-actions">
+      <button class="icon-btn" title="Edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></button>
+      <button class="icon-btn" title="Cancel"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <button class="icon-btn" title="Notes"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></button>
+      <button class="icon-btn" title="Help"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></button>
+    </div>
+  </div>
+
+  <div class="block-card">
+    <div class="block-card-header">
+      <div class="block-card-title-area">
+        <h3>Status</h3>
+        <span class="status-confirmed-pill">Confirmed</span>
+      </div>
+      <div class="block-card-actions">
+        <button class="icon-btn-sm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>
+        <button class="btn-outline"><span style="font-size: 16px; line-height: 1;">+</span> Notes</button>
+      </div>
+    </div>
+    <div class="status-occupancy">Occupancy 100%</div>
+    <div class="block-stat-cards">
+      <div class="block-stat-card filled">
+        <div class="bs-label">Picked-up</div>
+        <div class="bs-value-row">
+          <div class="bs-value">3 / 3</div>
+          <button class="btn-primary-sm">View</button>
+        </div>
+      </div>
+      <div class="block-stat-card">
+        <div class="bs-label">Available</div>
+        <div class="bs-value">0</div>
+      </div>
+      <div class="block-stat-card">
+        <div class="bs-label">Released</div>
+        <div class="bs-value">23</div>
+      </div>
+    </div>
+    <div class="block-status-footer">
+      <div class="footer-left">
+        <span class="muted-label">Booker</span>
+        <a href="#" class="link-underline">Francesca</a>
+        <a href="#" class="link-arrow">View more →</a>
+      </div>
+      <div class="footer-right">
+        <span class="muted-label">Block number</span>
+        <span class="bold-3">3</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="block-card">
+    <div class="block-card-header">
+      <h3>Settings</h3>
+      <div class="block-card-actions">
+        <button class="btn-outline"><span style="color: var(--indigo);">⚡</span> Create billing automation</button>
+        <button class="btn-outline"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-right: 4px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg> Adjust</button>
+      </div>
+    </div>
+    <div class="settings-grid">
+      <div class="setting-cell">
+        <div class="setting-label">7 nights, Monday - Monday</div>
+        <div class="setting-value">27/04/2026 - 04/05/2026</div>
+      </div>
+      <div class="setting-cell">
+        <div class="setting-label">Pickup distribution</div>
+        <div class="setting-value">All in one group</div>
+      </div>
+      <div class="setting-cell">
+        <div class="setting-label">Release at</div>
+        <div class="setting-value">26/04/2026 00:00 <span style="margin-left: 6px; color: var(--text-muted);">⋮</span></div>
+      </div>
+      <div class="setting-cell">
+        <div class="setting-label">Rate</div>
+        <div class="setting-value">D (Laura block) <span style="margin-left: 6px; color: var(--text-muted);">✏</span></div>
+      </div>
+    </div>
+    <table class="block-matrix">
+      <thead>
+        <tr>
+          <th>Space category</th>
+          <th><div>Monday</div><div class="muted-line">27/04/2026</div></th>
+          <th><div>Tuesday</div><div class="muted-line">28/04/2026</div></th>
+          <th><div>Wednesday</div><div class="muted-line">29/04/2026</div></th>
+          <th><div>Thursday</div><div class="muted-line">30/04/2026</div></th>
+          <th><div>Friday</div><div class="muted-line">01/05/2026</div></th>
+          <th><div>Saturday</div><div class="muted-line">02/05/2026</div></th>
+          <th><div>Sunday</div><div class="muted-line">03/05/2026</div></th>
+          <th><div>Monday</div><div class="muted-line">04/05/2026</div></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><div>Room 1</div><div class="muted-line">Guests: 2</div></td>
+          <td>1 / -</td>
+          <td>1 / -</td>
+          <td>1 / -</td>
+          <td>0 / -</td>
+          <td>0 / -</td>
+          <td>0 / -</td>
+          <td>0 / -</td>
+          <td></td>
+        </tr>
+        <tr class="matrix-summary-row">
+          <td><span class="muted-line">Picked-up / Blocked</span></td>
+          <td>1 / -</td>
+          <td>1 / -</td>
+          <td>1 / -</td>
+          <td>0 / -</td>
+          <td>0 / -</td>
+          <td>0 / -</td>
+          <td>0 / -</td>
+          <td>Check out</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<main class="closed-bill-page" id="entry-closed-bill" hidden>
+  <span class="closed-bill-back" onclick="backToBill()">‹ Back to bill</span>
+  <div class="closed-bill-header">
+    <div class="closed-bill-title-area">
+      <h1>Tom Hanks-658845</h1>
+      <span class="substatus">Closed bill</span>
+    </div>
+    <div class="closed-bill-actions">
+      <button class="icon-btn" title="Email">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      </button>
+      <button class="icon-btn" title="Share">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+      </button>
+      <button class="icon-btn" title="Print">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      </button>
+      <button class="icon-btn" title="More">⋮</button>
+    </div>
+  </div>
+
+  <div class="closed-bill-body">
+    <div class="closed-bill-main">
+      <table class="closed-bill-table">
+        <thead>
+          <tr>
+            <th>Deposit</th><th>Created</th><th>Consumed</th><th>Count</th><th>VAT rate</th><th>Net</th><th class="col-amount">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Deposit</td>
+            <td id="closed-bill-deposit-created">05/07/2026</td>
+            <td id="closed-bill-deposit-consumed">05/07/2026</td>
+            <td>1 x €300.00</td>
+            <td id="closed-bill-deposit-vat">10%</td>
+            <td id="closed-bill-deposit-net">€30.00</td>
+            <td class="col-amount">€300.00</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <hr class="closed-bill-divider" />
+
+      <table class="closed-bill-table">
+        <thead>
+          <tr>
+            <th>Payment</th><th>Created</th><th>Consumed</th><th>Count</th><th>VAT rate</th><th>Net</th><th class="col-amount">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Bank transfer</td>
+            <td id="closed-bill-payment-created">05/07/2026</td>
+            <td id="closed-bill-payment-consumed">05/07/2026</td>
+            <td>1 x €300.00</td>
+            <td id="closed-bill-payment-vat">10%</td>
+            <td id="closed-bill-payment-net">€30.00</td>
+            <td class="col-amount">-€300.00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <aside class="closed-bill-sidebar">
+      <div class="closed-bill-card">
+        <div class="card-label">To be paid</div>
+        <div class="card-value-row">
+          <span class="card-value">€ 0.00</span>
+          <span class="balance-pill">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>
+            Balaced
+          </span>
+        </div>
+      </div>
+
+      <div class="closed-bill-card">
+        <h3>Details</h3>
+        <div class="info-rows">
+          <div class="info-row"><span class="info-label">Issued</span><span class="info-value">05/07/2026 11:30 AM</span></div>
+          <div class="info-row"><span class="info-label">Issuer</span><span class="info-value">Mike Johnsson</span></div>
+          <div class="info-row"><span class="info-label">Taxation date</span><span class="info-value">05/07/2026</span></div>
+          <div class="info-row"><span class="info-label">Purchase order number</span><span class="info-value">738</span></div>
+          <div class="info-row"><span class="info-label">Last email sent</span><span class="info-value">05/07/2026 11:30 AM</span></div>
+        </div>
+        <div class="view-emails">
+          <span style="text-decoration: underline;">View emails sent</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+      </div>
+
+      <div class="closed-bill-card">
+        <h3>Owner</h3>
+        <div class="info-rows">
+          <div class="info-row"><span class="info-label">Owner</span><span class="info-value"><span class="info-value-link">Tom Hanks</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span></div>
+          <div class="info-row"><span class="info-label">Tax identifier</span><span class="info-value">741293</span></div>
+          <div class="info-row"><span class="info-label">Additional tax identifier</span><span class="info-value">637298</span></div>
+          <div class="info-row"><span class="info-label">Billing code</span><span class="info-value">-</span></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<div class="scrim" id="scrim" onclick="closePanel()"></div>
+
+<aside class="panel" id="panel">
+  <div id="screen-form" style="display: flex; flex-direction: column; height: 100%;">
+    <div class="panel-header">
+      <button class="panel-close" onclick="closePanel()">×</button>
+      <span class="panel-title" id="panel-title">Log as deposit</span>
+    </div>
+    <div class="panel-body">
+      <p class="panel-explainer">For accurate tax reporting, the payment will be closed on a bill and replaced with a negative deposit to settle the outstanding balance on the final bill.</p>
+
+      <div class="link-options" id="link-options" hidden>
+        <div class="radio-section" id="rs-block">
+          <div class="radio-item" id="opt-block" onclick="selectLinkOption('block')">
+            <span class="dot"></span>
+            <span class="lbl">Link to availability block</span>
+          </div>
+          <div class="radio-nested" id="nested-block" hidden>
+            <label class="field-label">Existing availability block</label>
+            <div class="input search-input" id="block-input" onclick="openBlockDropdown(event)">
+              <input type="text" id="block-search" placeholder="Select an availability block" autocomplete="off" oninput="filterBlocks(this.value)">
+              <span class="chevron">▾</span>
+            </div>
+          </div>
+        </div>
+        <div class="radio-section" id="rs-event">
+          <div class="radio-item" id="opt-event" onclick="selectLinkOption('event')">
+            <span class="dot"></span>
+            <span class="lbl">Select event start date</span>
+          </div>
+          <div class="radio-nested" id="nested-event" hidden>
+            <label class="field-label">Event start date</label>
+            <div class="input placeholder" id="date-input" onclick="openCalendar(event)">
+              <span id="date-display">DD/MM/YYYY</span>
+              <span style="color: var(--text-muted);">📅</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="field" id="field-description">
+        <label class="field-label" id="description-label">Description<span id="description-required"> *</span></label>
+        <div class="input text-input">
+          <input type="text" id="description-input" placeholder="Add a name or a note for the deposit" onfocus="this.parentElement.classList.add('focused')" onblur="this.parentElement.classList.remove('focused')">
+        </div>
+      </div>
+
+      <div class="panel-divider"></div>
+
+      <div class="balance-row">
+        <span class="lbl">Payment balance</span>
+        <span class="val">€ 300.00</span>
+      </div>
+
+      <div class="error-banner" id="error-banner" hidden>
+        <span class="error-banner-icon">!</span>
+        <span class="error-banner-text">The total amount exceeds the payment balance.</span>
+      </div>
+
+      <div class="input-row cols-2" style="margin-bottom: 6px;">
+        <label class="field-label" style="margin-bottom: 0;">Amount</label>
+        <label class="field-label" style="margin-bottom: 0;">Expect tax rate</label>
+      </div>
+      <div id="vat-rows"></div>
+      <p class="field-helper" id="vat-helper" style="margin-top: 8px;">Auto-calculated from payment amount</p>
+
+      <button class="add-vat" id="add-vat-btn" hidden onclick="addVatRow()"><span class="add-vat-icon">+</span> Add additional tax rate</button>
+    </div>
+    <div class="panel-footer">
+      <button class="btn" onclick="closePanel()">Close</button>
+      <button class="btn btn-primary" id="primary-cta" onclick="submitDeposit()">Log as deposit</button>
+    </div>
+  </div>
+</aside>
+
+<div class="popover calendar-popover" id="calendar-popover" hidden>
+  <div class="calendar-header">
+    <button class="cal-nav" onclick="calNav(-1)">‹</button>
+    <span class="cal-month" id="cal-month">May 2026</span>
+    <button class="cal-nav" onclick="calNav(1)">›</button>
+  </div>
+  <div class="calendar-dow">
+    <span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span>
+  </div>
+  <div class="calendar-grid" id="cal-grid"></div>
+</div>
+
+<div class="popover rate-popover" id="rate-popover" hidden>
+  <div class="rate-item" onclick="pickRate(0)">0%</div>
+  <div class="rate-item" onclick="pickRate(5)">5%</div>
+  <div class="rate-item" onclick="pickRate(10)">10%</div>
+  <div class="rate-item" onclick="pickRate(13)">13%</div>
+  <div class="rate-item" onclick="pickRate(21)">21%</div>
+</div>
+
+<div class="popover block-popover" id="block-popover" hidden></div>
+
+<div class="toast" id="toast" hidden>
+  <span class="toast-icon">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+  </span>
+  <div class="toast-body">
+    <div class="toast-title" id="toast-title">Deposit logged</div>
+    <div class="toast-msg" id="toast-msg">€300.00 has been logged as a deposit on this bill.</div>
+  </div>
+  <button class="toast-close" onclick="hideToast()">×</button>
+</div>
+
+<aside class="tester">
+  <div class="t-row">
+    <span class="t-label">Entry</span>
+    <select id="entry-select" onchange="switchEntry(this.value)">
+      <option value="billing">Billing tab (3-dot on payment row)</option>
+    </select>
+  </div>
+  <div class="t-row">
+    <span class="t-label">Flow</span>
+    <select id="flow-select" onchange="switchFlow(this.value)">
+      <option value="v11">Set event start date</option>
+      <option value="v12">Multiple VATs</option>
+      <option value="v14">Link to availability block</option>
+    </select>
+  </div>
+  <div class="t-row">
+    <span class="t-step" id="step-display">Step: ready</span>
+    <button class="btn t-reset" onclick="resetFlow()">Reset</button>
+  </div>
+  <div class="t-banner" id="flow-banner">V1.1 — Click the ⋮ next to the €300 payment, then "Log as deposit". Pick a date, write a description, optionally change the tax rate, then Log as deposit.</div>
+</aside>
+
+<script>
+  const PAYMENT = 300;
+  const RATES = [0, 5, 10, 13, 21];
+  const VAT_PREFILL_ORDER = [21, 13, 10, 5, 0];
+  function nextRate(rowIndex) {
+    return VAT_PREFILL_ORDER[rowIndex] !== undefined ? VAT_PREFILL_ORDER[rowIndex] : 0;
+  }
+  const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+  const RESERVATIONS = [
+    { name: "Reservation #45821 — J. Pellegrini", meta: "14 May 2026 · 3 nights · Deluxe Room" },
+    { name: "Reservation #45822 — M. Winters", meta: "16 May 2026 · 2 nights · Suite" }
+  ];
+
+  const BLOCKS = [
+    { name: "Spring conference 2026", section: "suggested", startDate: "14/05/2026" },
+    { name: "Annual gala 2026", section: "suggested", startDate: "22/05/2026" },
+    { name: "Summer wedding showcase", section: "future", startDate: "12/06/2026" },
+    { name: "Tech summit Q3 2026", section: "future", startDate: "08/09/2026" },
+    { name: "Holiday season block", section: "future", startDate: "15/12/2026" },
+    { name: "Corporate retreat 2026", section: "future", startDate: "07/10/2026" }
+  ];
+
+  const flowConfigs = {
+    v11: {
+      banner: "V1.1 — Click the ⋮ next to the €300 payment, then 'Log as deposit'. Pick a date, write a description, optionally change the tax rate.",
+      linkOptions: ["event"],
+      defaultLink: "event",
+      multiVat: false,
+      successText: "€300.00 has been held as a deposit and will be applied to the bill when the items post.",
+      goToReportAfter: false
+    },
+    v12: {
+      banner: "V1.2 — Open the panel, then click 'Add additional tax rate' to split the amount across multiple VATs.",
+      linkOptions: ["event"],
+      defaultLink: "event",
+      multiVat: true,
+      successText: "€300.00 has been held as a deposit, split across multiple tax rates.",
+      goToReportAfter: false
+    },
+    v14: {
+      banner: "V1.4 — 'Link to availability block' is selected by default. Pick a block from the Suggested or future-date sections. Multi-VAT supported. After save, the deposit row's ⋮ menu shows 'View availability block'.",
+      linkOptions: ["block", "event"],
+      defaultLink: "block",
+      multiVat: true,
+      successText: "€300.00 has been logged as a deposit against the selected availability block.",
+      goToReportAfter: false
+    }
+  };
+
+  let currentEntry = "billing";
+  let currentFlow = "v11";
+  let vatRows = [{ amount: null, rate: nextRate(0) }];
+  let selectedDate = null;
+  let calMonth = 4;
+  let calYear = 2026;
+  let activeRateRow = null;
+  let toastTimer = null;
+  let editMode = false;
+  let lastDeposit = null;
+  let currentLinkMode = "event";
+  let selectedReservation = null;
+  let selectedBlock = null;
+  let userDescription = "";
+
+  function $(id) { return document.getElementById(id); }
+  function setStep(text) { $("step-display").textContent = "Step: " + text; }
+
+  function switchEntry(entry) {
+    currentEntry = entry;
+    $("entry-select").value = entry;
+    $("entry-billing").hidden = entry !== "billing";
+    $("entry-payments").hidden = entry !== "payments";
+    $("entry-availability-block").hidden = true;
+    $("entry-closed-bill").hidden = true;
+    $("topnav-main").hidden = false;
+    $("topnav-closed-bill").hidden = true;
+    $("pageheader-main").hidden = false;
+    $("tabs-main").hidden = false;
+    $("tab-billing").classList.toggle("active", entry === "billing");
+    $("tab-payments").classList.toggle("active", entry === "payments");
+    closeAllMenus();
+    closePanel(true);
+    setStep("on " + entry + " tab");
+  }
+
+  function closeAllMenus() {
+    $("billing-menu").hidden = true;
+    $("payments-menu").hidden = true;
+    $("deposit-menu").hidden = true;
+    $("calendar-popover").hidden = true;
+    $("rate-popover").hidden = true;
+    $("block-popover").hidden = true;
+  }
+
+  function toggleBillingMenu(e) {
+    e.stopPropagation();
+    const m = $("billing-menu");
+    m.hidden = !m.hidden;
+    if (!m.hidden) setStep("billing menu open");
+  }
+
+  function togglePaymentsMenu(e) {
+    e.stopPropagation();
+    const m = $("payments-menu");
+    m.hidden = !m.hidden;
+    if (!m.hidden) setStep("payments menu open");
+  }
+
+  function toggleDepositMenu(e) {
+    e.stopPropagation();
+    const m = $("deposit-menu");
+    m.hidden = !m.hidden;
+    const viewBlockItem = $("deposit-menu-view-block");
+    if (viewBlockItem) {
+      viewBlockItem.hidden = !(lastDeposit && lastDeposit.flow === "v14");
+    }
+    if (!m.hidden) setStep("deposit row menu open");
+  }
+
+  document.addEventListener("click", function(e) {
+    if (!e.target.closest(".dropdown-menu") && !e.target.closest(".more-btn") && !e.target.closest(".deposit-row-chevron")) {
+      $("billing-menu").hidden = true;
+      $("payments-menu").hidden = true;
+      $("deposit-menu").hidden = true;
+    }
+    if (!e.target.closest(".calendar-popover") && !e.target.closest("#date-input")) {
+      $("calendar-popover").hidden = true;
+    }
+    if (!e.target.closest(".rate-popover") && !e.target.closest(".vat-rate")) {
+      $("rate-popover").hidden = true;
+    }
+    if (!e.target.closest(".block-popover") && !e.target.closest("#block-input")) {
+      if (!$("block-popover").hidden) closeBlockDropdown();
+    }
+  });
+
+  function openDeposit() {
+    closeAllMenus();
+    editMode = false;
+    $("panel").classList.remove("edit-mode");
+    $("panel-title").textContent = "Log as deposit";
+    $("primary-cta").textContent = "Log as deposit";
+    const cfg = flowConfigs[currentFlow];
+    $("link-options").hidden = false;
+    $("rs-event").hidden = !cfg.linkOptions.includes("event");
+    $("rs-block").hidden = !cfg.linkOptions.includes("block");
+    const showRadios = cfg.linkOptions.length > 1;
+    $("opt-event").style.display = showRadios ? "" : "none";
+    $("opt-block").style.display = showRadios ? "" : "none";
+    selectedReservation = null;
+    selectedBlock = null;
+    userDescription = "";
+    updateBlockDisplay();
+    selectLinkOption(cfg.defaultLink);
+    $("add-vat-btn").hidden = !cfg.multiVat;
+    vatRows = [{ amount: null, rate: nextRate(0) }];
+    renderVatRows();
+    selectedDate = null;
+    $("date-display").textContent = "DD/MM/YYYY";
+    $("date-input").classList.add("placeholder");
+    $("date-input").classList.remove("has-value");
+    $("screen-form").style.display = "flex";
+    $("panel").classList.add("open");
+    $("scrim").classList.add("show");
+    setStep("Log as deposit panel open");
+  }
+
+  function selectLinkOption(mode) {
+    if (currentLinkMode === "event" && mode !== "event") {
+      userDescription = $("description-input").value;
+    }
+    currentLinkMode = mode;
+    ["reservation", "event", "block"].forEach(m => {
+      const opt = $("opt-" + m);
+      const nested = $("nested-" + m);
+      if (opt) opt.classList.toggle("active", m === mode);
+      if (nested) nested.hidden = m !== mode;
+    });
+    const descInput = $("description-input");
+    const descRequired = $("description-required");
+    if (mode === "reservation") {
+      if (descRequired) descRequired.hidden = true;
+      descInput.readOnly = true;
+      descInput.classList.add("readonly");
+      descInput.placeholder = "{reservationID}";
+      descInput.value = (selectedReservation !== null) ? RESERVATIONS[selectedReservation].name : "";
+    } else if (mode === "block") {
+      if (descRequired) descRequired.hidden = true;
+      descInput.readOnly = false;
+      descInput.classList.remove("readonly");
+      descInput.placeholder = "Add a name or a note for the deposit";
+      descInput.value = userDescription;
+    } else {
+      if (descRequired) descRequired.hidden = false;
+      descInput.readOnly = false;
+      descInput.classList.remove("readonly");
+      descInput.placeholder = "Add a name or a note for the deposit";
+      descInput.value = userDescription;
+    }
+    setStep("link mode: " + mode);
+  }
+
+  function renderReservationItems(query) {
+    const pop = $("reservation-popover");
+    pop.innerHTML = "";
+    const q = (query || "").toLowerCase().trim();
+    let count = 0;
+    RESERVATIONS.forEach((res, idx) => {
+      const matches = !q || res.name.toLowerCase().includes(q) || res.meta.toLowerCase().includes(q);
+      if (matches) {
+        const div = document.createElement("div");
+        div.className = "reservation-item" + (idx === selectedReservation ? " selected" : "");
+        div.addEventListener("click", () => pickReservation(idx));
+        div.innerHTML = "<div>" + res.name + "</div><div class=\"res-meta\">" + res.meta + "</div>";
+        pop.appendChild(div);
+        count++;
+      }
+    });
+    if (count === 0) {
+      pop.innerHTML = "<div class=\"reservation-item\" style=\"color: var(--text-muted); cursor: default;\">No reservations match</div>";
+    }
+  }
+
+  function openReservationDropdown(e) {
+    e.stopPropagation();
+    if (!$("reservation-popover").hidden) return;
+    const inputField = $("reservation-search");
+    const rect = $("reservation-input").getBoundingClientRect();
+    const pop = $("reservation-popover");
+    pop.style.left = rect.left + "px";
+    pop.style.top = (rect.bottom + 4) + "px";
+    pop.style.width = rect.width + "px";
+    renderReservationItems(inputField.value);
+    pop.hidden = false;
+    setTimeout(() => {
+      inputField.focus();
+      inputField.select();
+    }, 0);
+    setStep("reservation picker open");
+  }
+
+  function filterReservations(query) {
+    if ($("reservation-popover").hidden) {
+      $("reservation-popover").hidden = false;
+    }
+    renderReservationItems(query);
+  }
+
+  function pickReservation(idx) {
+    selectedReservation = idx;
+    if (currentLinkMode === "reservation") {
+      $("description-input").value = RESERVATIONS[idx].name;
+    }
+    closeReservationDropdown();
+    setStep("reservation selected: " + RESERVATIONS[idx].name);
+  }
+
+  function closeReservationDropdown() {
+    $("reservation-popover").hidden = true;
+    updateReservationDisplay();
+  }
+
+  function updateReservationDisplay() {
+    const inputField = $("reservation-search");
+    if (!inputField) return;
+    if (selectedReservation === null) {
+      inputField.value = "";
+    } else {
+      const res = RESERVATIONS[selectedReservation];
+      inputField.value = res.name + " · " + res.meta;
+    }
+  }
+
+  function renderBlockItems(query) {
+    const pop = $("block-popover");
+    pop.innerHTML = "";
+    const q = (query || "").toLowerCase().trim();
+    const matches = BLOCKS.map((b, i) => Object.assign({}, b, { idx: i })).filter(b => !q || b.name.toLowerCase().includes(q));
+    const suggested = matches.filter(b => b.section === "suggested");
+    const future = matches.filter(b => b.section === "future");
+    const buildSection = (label, items) => {
+      if (items.length === 0) return null;
+      const sec = document.createElement("div");
+      sec.className = "popover-section";
+      const header = document.createElement("div");
+      header.className = "popover-section-header";
+      header.textContent = label;
+      sec.appendChild(header);
+      items.forEach(b => {
+        const item = document.createElement("div");
+        item.className = "block-item" + (b.idx === selectedBlock ? " selected" : "");
+        item.textContent = b.name;
+        item.addEventListener("click", () => pickBlock(b.idx));
+        sec.appendChild(item);
+      });
+      return sec;
+    };
+    const s1 = buildSection("Suggested", suggested);
+    const s2 = buildSection("Availability blocks with future date", future);
+    if (s1) pop.appendChild(s1);
+    if (s2) pop.appendChild(s2);
+    if (!s1 && !s2) {
+      pop.innerHTML = "<div class=\"block-item\" style=\"color: var(--text-muted); cursor: default;\">No availability blocks match</div>";
+    }
+  }
+
+  function openBlockDropdown(e) {
+    e.stopPropagation();
+    if (!$("block-popover").hidden) return;
+    const inputField = $("block-search");
+    const rect = $("block-input").getBoundingClientRect();
+    const pop = $("block-popover");
+    pop.style.left = rect.left + "px";
+    pop.style.top = (rect.bottom + 4) + "px";
+    pop.style.width = rect.width + "px";
+    renderBlockItems(inputField.value);
+    pop.hidden = false;
+    setTimeout(() => {
+      inputField.focus();
+      inputField.select();
+    }, 0);
+    setStep("block picker open");
+  }
+
+  function filterBlocks(query) {
+    if ($("block-popover").hidden) {
+      $("block-popover").hidden = false;
+    }
+    renderBlockItems(query);
+  }
+
+  function pickBlock(idx) {
+    selectedBlock = idx;
+    closeBlockDropdown();
+    setStep("availability block selected: " + BLOCKS[idx].name);
+  }
+
+  function closeBlockDropdown() {
+    $("block-popover").hidden = true;
+    updateBlockDisplay();
+  }
+
+  function updateBlockDisplay() {
+    const inputField = $("block-search");
+    if (!inputField) return;
+    if (selectedBlock === null) {
+      inputField.value = "";
+    } else {
+      inputField.value = BLOCKS[selectedBlock].name;
+    }
+  }
+
+  function editStartDate() {
+    closeAllMenus();
+    if (!lastDeposit) return;
+    editMode = true;
+    $("panel").classList.add("edit-mode");
+    $("panel-title").textContent = "Edit start date";
+    $("primary-cta").textContent = "Save changes";
+    currentLinkMode = lastDeposit.linkMode || "event";
+    selectedReservation = (lastDeposit.reservationIdx !== undefined && lastDeposit.reservationIdx !== null) ? lastDeposit.reservationIdx : null;
+    selectedBlock = (lastDeposit.blockIdx !== undefined && lastDeposit.blockIdx !== null) ? lastDeposit.blockIdx : null;
+    userDescription = lastDeposit.userDescription || "";
+
+    const cfg = flowConfigs[lastDeposit.flow];
+    $("link-options").hidden = false;
+    $("rs-event").hidden = !cfg.linkOptions.includes("event");
+    $("rs-block").hidden = !cfg.linkOptions.includes("block");
+    const showRadios = cfg.linkOptions.length > 1;
+    $("opt-event").style.display = showRadios ? "" : "none";
+    $("opt-block").style.display = showRadios ? "" : "none";
+
+    updateBlockDisplay();
+
+    ["reservation", "event", "block"].forEach(m => {
+      const opt = $("opt-" + m);
+      const nested = $("nested-" + m);
+      if (opt) opt.classList.toggle("active", m === currentLinkMode);
+      if (nested) nested.hidden = m !== currentLinkMode;
+    });
+
+    const descInput = $("description-input");
+    const descRequired = $("description-required");
+    if (currentLinkMode === "reservation") {
+      if (descRequired) descRequired.hidden = true;
+      descInput.readOnly = true;
+      descInput.classList.add("readonly");
+      descInput.placeholder = "{reservationID}";
+      descInput.value = (selectedReservation !== null) ? RESERVATIONS[selectedReservation].name : "";
+    } else if (currentLinkMode === "block") {
+      if (descRequired) descRequired.hidden = true;
+      descInput.readOnly = false;
+      descInput.classList.remove("readonly");
+      descInput.placeholder = "Add a name or a note for the deposit";
+      descInput.value = userDescription || "";
+    } else {
+      if (descRequired) descRequired.hidden = false;
+      descInput.readOnly = false;
+      descInput.classList.remove("readonly");
+      descInput.placeholder = "Add a name or a note for the deposit";
+      descInput.value = userDescription || "";
+    }
+
+    $("add-vat-btn").hidden = true;
+    vatRows = lastDeposit.rates.map(r => ({ ...r }));
+    renderVatRows();
+
+    if (lastDeposit.date) {
+      selectedDate = { ...lastDeposit.date };
+      const dd = String(selectedDate.day).padStart(2, '0');
+      const mm = String(selectedDate.month + 1).padStart(2, '0');
+      $("date-display").textContent = dd + "/" + mm + "/" + selectedDate.year;
+      $("date-input").classList.remove("placeholder");
+      $("date-input").classList.add("has-value");
+    } else {
+      selectedDate = null;
+      $("date-display").textContent = "DD/MM/YYYY";
+      $("date-input").classList.add("placeholder");
+      $("date-input").classList.remove("has-value");
+    }
+
+    $("screen-form").style.display = "flex";
+    $("panel").classList.add("open");
+    $("scrim").classList.add("show");
+    setStep("editing deposit");
+  }
+
+  function viewBillWithDeposit() {
+    closeAllMenus();
+    closePanel(true);
+    if (lastDeposit && lastDeposit.date) {
+      const dd = String(lastDeposit.date.day).padStart(2, '0');
+      const mm = String(lastDeposit.date.month + 1).padStart(2, '0');
+      const dateStr = dd + "/" + mm + "/" + lastDeposit.date.year;
+      $("closed-bill-deposit-created").textContent = dateStr;
+      $("closed-bill-deposit-consumed").textContent = dateStr;
+      $("closed-bill-payment-created").textContent = dateStr;
+      $("closed-bill-payment-consumed").textContent = dateStr;
+    }
+    if (lastDeposit) {
+      $("closed-bill-deposit-vat").textContent = lastDeposit.rates[0].rate + "%";
+      $("closed-bill-payment-vat").textContent = lastDeposit.rates[0].rate + "%";
+      const net = (PAYMENT / (1 + lastDeposit.rates[0].rate / 100)).toFixed(2);
+      const tax = (PAYMENT - parseFloat(net)).toFixed(2);
+      $("closed-bill-deposit-net").textContent = "€" + tax;
+      $("closed-bill-payment-net").textContent = "€" + tax;
+    }
+    $("entry-billing").hidden = true;
+    $("entry-payments").hidden = true;
+    $("entry-availability-block").hidden = true;
+    $("entry-closed-bill").hidden = false;
+    $("topnav-main").hidden = true;
+    $("topnav-closed-bill").hidden = false;
+    $("pageheader-main").hidden = true;
+    $("tabs-main").hidden = true;
+    setStep("viewing closed bill with deposit");
+  }
+
+  function viewAvailabilityBlock() {
+    closeAllMenus();
+    closePanel(true);
+    if (lastDeposit && lastDeposit.blockIdx !== null && lastDeposit.blockIdx !== undefined) {
+      $("block-page-name").textContent = BLOCKS[lastDeposit.blockIdx].name;
+    }
+    $("entry-billing").hidden = true;
+    $("entry-payments").hidden = true;
+    $("entry-closed-bill").hidden = true;
+    $("entry-availability-block").hidden = false;
+    $("topnav-main").hidden = true;
+    $("topnav-closed-bill").hidden = false;
+    $("pageheader-main").hidden = true;
+    $("tabs-main").hidden = true;
+    setStep("viewing availability block");
+  }
+
+  function backToBill() {
+    $("entry-closed-bill").hidden = true;
+    $("entry-availability-block").hidden = true;
+    $("topnav-closed-bill").hidden = true;
+    $("topnav-main").hidden = false;
+    $("pageheader-main").hidden = false;
+    $("tabs-main").hidden = false;
+    $("entry-billing").hidden = currentEntry !== "billing";
+    $("entry-payments").hidden = currentEntry !== "payments";
+    setStep("on " + currentEntry + " tab");
+  }
+
+  function openCalendar(e) {
+    e.stopPropagation();
+    if (selectedDate) {
+      calMonth = selectedDate.month;
+      calYear = selectedDate.year;
+    }
+    buildCalendar();
+    const rect = $("date-input").getBoundingClientRect();
+    const pop = $("calendar-popover");
+    pop.style.left = rect.left + "px";
+    pop.style.top = (rect.bottom + 4) + "px";
+    pop.hidden = false;
+    setStep("calendar open");
+  }
+
+  function buildCalendar() {
+    $("cal-month").textContent = MONTH_NAMES[calMonth] + " " + calYear;
+    const firstDay = new Date(calYear, calMonth, 1).getDay();
+    const startOffset = firstDay === 0 ? 6 : firstDay - 1;
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    const daysInPrev = new Date(calYear, calMonth, 0).getDate();
+    const grid = $("cal-grid");
+    grid.innerHTML = "";
+    for (let i = startOffset - 1; i >= 0; i--) {
+      const d = daysInPrev - i;
+      const div = document.createElement("div");
+      div.className = "cal-day other-month";
+      div.textContent = d;
+      grid.appendChild(div);
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      const isSel = selectedDate && selectedDate.day === d && selectedDate.month === calMonth && selectedDate.year === calYear;
+      const div = document.createElement("div");
+      div.className = "cal-day" + (isSel ? " selected" : "");
+      div.textContent = d;
+      div.addEventListener("click", () => pickDate(d));
+      grid.appendChild(div);
+    }
+    const total = startOffset + daysInMonth;
+    const trail = (7 - (total % 7)) % 7;
+    for (let d = 1; d <= trail; d++) {
+      const div = document.createElement("div");
+      div.className = "cal-day other-month";
+      div.textContent = d;
+      grid.appendChild(div);
+    }
+  }
+
+  function calNav(dir) {
+    calMonth += dir;
+    if (calMonth < 0) { calMonth = 11; calYear--; }
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+    buildCalendar();
+  }
+
+  function pickDate(d) {
+    selectedDate = { day: d, month: calMonth, year: calYear };
+    const dd = String(d).padStart(2, '0');
+    const mm = String(calMonth + 1).padStart(2, '0');
+    $("date-display").textContent = dd + "/" + mm + "/" + calYear;
+    $("date-input").classList.remove("placeholder");
+    $("date-input").classList.add("has-value");
+    $("calendar-popover").hidden = true;
+    setStep("date selected: " + dd + "/" + mm + "/" + calYear);
+  }
+
+  function nonLastSum() { return vatRows.slice(0, -1).reduce((s, r) => s + (parseFloat(r.amount) || 0), 0); }
+  function lastAmt() { return PAYMENT - nonLastSum(); }
+
+  function renderVatRows() {
+    const wrap = $("vat-rows");
+    wrap.innerHTML = "";
+    vatRows.forEach((row, i) => {
+      const isLast = i === vatRows.length - 1;
+      const last = lastAmt();
+      const div = document.createElement("div");
+      div.className = "vat-row";
+      const amountInner = isLast
+        ? `<span class="ccy">€</span><span class="val">${last.toFixed(0)}</span>`
+        : `<span class="ccy">€</span><input data-i="${i}" type="text" inputmode="decimal" value="${row.amount === null ? '' : row.amount}" placeholder="0">`;
+      const canDel = vatRows.length > 1;
+      const lockedClass = isLast ? " locked" : "";
+      div.innerHTML = `
+        <div class="vat-amount${lockedClass}">${amountInner}</div>
+        <div class="vat-rate" data-row="${i}" onclick="openRatePopover(event, ${i})"><span>${row.rate}%</span><span class="input-clear-chevron"><span>×</span><span>▾</span></span></div>
+        <button class="vat-del" data-del="${i}" ${canDel ? '' : 'disabled'} aria-label="Remove">×</button>
+      `;
+      wrap.appendChild(div);
+    });
+    wrap.querySelectorAll('input[data-i]').forEach(el => {
+      el.addEventListener('input', e => {
+        const i = parseInt(e.target.dataset.i, 10);
+        vatRows[i].amount = e.target.value;
+        const allRows = wrap.querySelectorAll('.vat-row');
+        const lastRow = allRows[allRows.length - 1];
+        if (lastRow) {
+          const lastValEl = lastRow.querySelector('.val');
+          if (lastValEl) lastValEl.textContent = lastAmt().toFixed(0);
+        }
+        updateErrorState();
+      });
+    });
+    wrap.querySelectorAll('button[data-del]').forEach(el => {
+      el.addEventListener('click', e => {
+        const i = parseInt(e.currentTarget.dataset.del, 10);
+        if (vatRows.length > 1) {
+          vatRows.splice(i, 1);
+          renderVatRows();
+          setStep("vat row removed (" + vatRows.length + " rows)");
+        }
+      });
+    });
+    const helper = $("vat-helper");
+    if (vatRows.length === 1) {
+      helper.textContent = "Auto-calculated from payment amount";
+    } else {
+      helper.textContent = "Last row balances automatically";
+    }
+    updateErrorState();
+  }
+
+  function updateErrorState() {
+    const sumNonLast = nonLastSum();
+    const isOverAllocated = sumNonLast > PAYMENT && vatRows.length > 1;
+    const banner = $("error-banner");
+    if (banner) banner.hidden = !isOverAllocated;
+    const cta = $("primary-cta");
+    if (cta) cta.disabled = isOverAllocated;
+    const rows = $("vat-rows").querySelectorAll('.vat-row');
+    rows.forEach((rowEl, i) => {
+      const isLast = i === vatRows.length - 1;
+      const showError = !isLast && isOverAllocated;
+      const amountEl = rowEl.querySelector('.vat-amount');
+      if (!amountEl) return;
+      amountEl.classList.toggle('error', showError);
+      let errorIcon = amountEl.querySelector('.vat-error-icon');
+      if (showError && !errorIcon) {
+        const icon = document.createElement('span');
+        icon.className = 'vat-error-icon';
+        icon.textContent = '!';
+        amountEl.appendChild(icon);
+      } else if (!showError && errorIcon) {
+        errorIcon.remove();
+      }
+    });
+  }
+
+  function addVatRow() {
+    vatRows.push({ amount: null, rate: nextRate(vatRows.length) });
+    renderVatRows();
+    setStep("vat row added (" + vatRows.length + " rows)");
+  }
+
+  function openRatePopover(e, rowIndex) {
+    if (editMode) return;
+    e.stopPropagation();
+    activeRateRow = rowIndex;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pop = $("rate-popover");
+    pop.style.left = rect.left + "px";
+    pop.style.top = (rect.bottom + 4) + "px";
+    pop.style.width = rect.width + "px";
+    Array.from(pop.children).forEach((el, idx) => {
+      el.classList.toggle("selected", RATES[idx] === vatRows[rowIndex].rate);
+    });
+    pop.hidden = false;
+    setStep("tax rate menu open");
+  }
+
+  function pickRate(rate) {
+    if (activeRateRow === null) return;
+    vatRows[activeRateRow].rate = rate;
+    renderVatRows();
+    $("rate-popover").hidden = true;
+    setStep("tax rate set: " + rate + "%");
+  }
+
+  function showToast(title, msg) {
+    $("toast-title").textContent = title;
+    $("toast-msg").textContent = msg;
+    const t = $("toast");
+    t.hidden = false;
+    requestAnimationFrame(() => t.classList.add("show"));
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => hideToast(), 6000);
+  }
+
+  function hideToast() {
+    const t = $("toast");
+    t.classList.remove("show");
+    setTimeout(() => { t.hidden = true; }, 250);
+  }
+
+  function closePanel(skipStep) {
+    $("panel").classList.remove("open");
+    $("scrim").classList.remove("show");
+    closeAllMenus();
+    if (!skipStep) setStep("panel closed");
+  }
+
+  function submitDeposit() {
+    const cfg = flowConfigs[currentFlow];
+    let desc;
+    if (currentLinkMode === "reservation") {
+      desc = (selectedReservation !== null) ? RESERVATIONS[selectedReservation].name : "Reservation deposit";
+    } else if (currentLinkMode === "block") {
+      const typed = $("description-input").value.trim();
+      desc = typed || (selectedBlock !== null ? BLOCKS[selectedBlock].name : "Availability block deposit");
+    } else {
+      desc = $("description-input").value.trim() || "Deposit";
+    }
+    const dateText = selectedDate
+      ? String(selectedDate.day).padStart(2,'0') + "/" + String(selectedDate.month + 1).padStart(2,'0') + "/" + selectedDate.year
+      : (currentLinkMode === "reservation" && selectedReservation !== null ? RESERVATIONS[selectedReservation].meta.split(" · ")[0]
+         : currentLinkMode === "block" && selectedBlock !== null ? BLOCKS[selectedBlock].startDate
+         : "—");
+
+    $("original-payment-row").hidden = true;
+    $("deposit-row-wrap").hidden = false;
+    $("deposit-row-desc").textContent = desc;
+    $("deposit-row-date").textContent = dateText;
+
+    lastDeposit = {
+      description: desc,
+      userDescription: (currentLinkMode === "event" || currentLinkMode === "block") ? ($("description-input").value.trim()) : userDescription,
+      date: selectedDate ? { ...selectedDate } : null,
+      rates: vatRows.map(r => ({ ...r })),
+      flow: editMode ? lastDeposit.flow : currentFlow,
+      linkMode: currentLinkMode,
+      reservationIdx: selectedReservation,
+      blockIdx: selectedBlock
+    };
+
+    closePanel(true);
+
+    const wasEdit = editMode;
+    editMode = false;
+    $("panel").classList.remove("edit-mode");
+
+    if (wasEdit) {
+      showToast("Deposit updated", "Start date and description have been updated.");
+      setStep("deposit updated");
+      return;
+    }
+
+    setStep("deposit logged");
+
+    if (cfg.goToReportAfter) {
+      setTimeout(() => {
+        $("entry-billing").hidden = true;
+        $("entry-payments").hidden = true;
+        $("entry-availability-block").hidden = false;
+        showToast("Deposit logged", cfg.successText);
+        setStep("availability block report");
+      }, 300);
+    } else {
+      showToast("Deposit logged", cfg.successText);
+    }
+  }
+
+  function resetFlow() {
+    closePanel(true);
+    closeAllMenus();
+    $("entry-availability-block").hidden = true;
+    $("entry-closed-bill").hidden = true;
+    $("topnav-main").hidden = false;
+    $("topnav-closed-bill").hidden = true;
+    $("pageheader-main").hidden = false;
+    $("tabs-main").hidden = false;
+    $("original-payment-row").hidden = false;
+    $("deposit-row-wrap").hidden = true;
+    $("bill-refund-pill").innerHTML = "<span>To be refund</span><strong>€300,00</strong>";
+    $("bill-refund-total").textContent = "€100,00";
+    $("description-input").value = "";
+    $("description-input").readOnly = false;
+    $("description-input").classList.remove("readonly");
+    $("description-input").placeholder = "Add a name or a note for the deposit";
+    if ($("description-required")) $("description-required").hidden = false;
+    selectedDate = null;
+    lastDeposit = null;
+    editMode = false;
+    selectedReservation = null;
+    selectedBlock = null;
+    userDescription = "";
+    currentLinkMode = "event";
+    updateReservationDisplay();
+    updateBlockDisplay();
+    $("panel").classList.remove("edit-mode");
+    $("date-display").textContent = "DD/MM/YYYY";
+    $("date-input").classList.add("placeholder");
+    $("date-input").classList.remove("has-value");
+    vatRows = [{ amount: null, rate: nextRate(0) }];
+    renderVatRows();
+    hideToast();
+    switchEntry(currentEntry === "report" ? "billing" : currentEntry);
+    setStep("ready");
+  }
+
+  function switchFlow(flow) {
+    currentFlow = flow;
+    $("flow-banner").textContent = flowConfigs[flow].banner;
+    resetFlow();
+  }
+
+  renderVatRows();
+  setStep("ready");
+</script>
+
+</body>
+</html>
