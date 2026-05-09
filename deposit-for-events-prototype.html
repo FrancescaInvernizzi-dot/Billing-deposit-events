@@ -143,13 +143,42 @@
   .scrim.show { opacity: 1; pointer-events: auto; }
   .panel { position: fixed; top: 16px; right: 16px; bottom: 16px; width: 480px; background: var(--white); border-radius: 16px; box-shadow: var(--shadow-panel); transform: translateX(calc(100% + 24px)); transition: transform 0.25s ease-out; z-index: 90; display: flex; flex-direction: column; overflow: hidden; }
   .panel.open { transform: translateX(0); }
-  .panel-header { padding: 20px 24px 14px; display: flex; align-items: center; gap: 14px; }
+  .panel-header { padding: 20px 24px 14px; display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+
+  /* Process payment panel — new flow */
+  .pm-cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+  .pm-card { border: 1px solid var(--border-strong); border-radius: 10px; padding: 14px 12px 12px; text-align: center; cursor: pointer; position: relative; background: var(--white); display: flex; flex-direction: column; align-items: center; gap: 6px; transition: border-color 0.15s, background 0.15s; }
+  .pm-card:hover { border-color: var(--text-subtle); }
+  .pm-card.selected { border-color: var(--indigo); background: var(--indigo-light); }
+  .pm-card .pm-icon { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; color: var(--text); margin-bottom: 4px; }
+  .pm-card .pm-title { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.3; }
+  .pm-card .pm-sub { font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-top: 2px; }
+  .pm-card .pm-radio { position: absolute; top: 8px; right: 8px; width: 14px; height: 14px; border-radius: 50%; border: 1.5px solid var(--border-strong); }
+  .pm-card.selected .pm-radio { border-color: var(--indigo); background: var(--white); position: relative; }
+  .pm-card.selected .pm-radio::after { content: ""; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 7px; height: 7px; border-radius: 50%; background: var(--indigo); }
+
+  .info-banner { background: #EFF6FF; border-radius: 8px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px; margin-bottom: 18px; }
+  .info-banner-icon { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #2563EB; color: #2563EB; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; margin-top: 1px; font-family: Georgia, serif; font-style: italic; }
+  .info-banner-text { font-size: 14px; color: var(--text); line-height: 1.5; flex: 1; }
+
+  .toggle-section { margin-bottom: 18px; }
+  .toggle-row { display: flex; align-items: center; gap: 12px; padding: 4px 0; }
+  .toggle-label { font-size: 14px; font-weight: 500; color: var(--text); flex: 1; }
+  .toggle-switch { width: 36px; height: 20px; border-radius: 10px; background: #C7C9D1; position: relative; transition: background 0.18s; cursor: pointer; border: none; padding: 0; flex-shrink: 0; }
+  .toggle-switch.on { background: var(--indigo); }
+  .toggle-knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--white); transition: transform 0.18s; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+  .toggle-switch.on .toggle-knob { transform: translateX(16px); }
+  .toggle-hint { font-size: 13px; color: var(--text-muted); margin-top: 6px; line-height: 1.5; }
+
+  .input.textarea { padding: 0; height: auto; }
+  .input.textarea textarea { width: 100%; min-height: 64px; padding: 8px 12px; border: none; outline: none; background: transparent; font-size: 14px; resize: vertical; font-family: inherit; }
   .panel-close { width: 28px; height: 28px; border: 1px solid var(--border); border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; color: var(--text); }
   .panel-close:hover { background: var(--bg); }
   .panel-title { font-size: 20px; font-weight: 600; }
-  .panel-body { flex: 1; overflow-y: auto; padding: 0 24px 20px; }
+  .panel-body { flex: 1 1 0; overflow-y: auto; padding: 0 24px 20px; min-height: 0; }
   .panel-explainer { font-size: 14px; color: var(--text); line-height: 1.55; margin-bottom: 22px; }
-  .panel-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; gap: 8px; }
+  .panel-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; gap: 8px; flex-shrink: 0; }
+
 
   .field { margin-bottom: 18px; }
   .field-label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; color: var(--text); }
@@ -357,14 +386,20 @@
   .info-row .info-value-link { color: var(--text); text-decoration: underline; cursor: pointer; }
   .view-emails { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding-top: 14px; margin-top: 4px; border-top: 1px solid var(--border); cursor: pointer; font-size: 14px; }
 
-  .tester { position: fixed; bottom: 16px; left: 16px; background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 14px; box-shadow: var(--shadow-menu); z-index: 200; min-width: 280px; font-size: 13px; }
-  .tester .t-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 10px; }
-  .tester .t-row:last-child { margin-bottom: 0; }
-  .tester .t-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-  .tester select { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 12px; background: var(--white); }
-  .tester .t-step { font-size: 12px; color: var(--text-muted); }
-  .tester button.t-reset { font-size: 12px; padding: 6px 10px; height: auto; }
-  .tester .t-banner { font-size: 11px; color: var(--text-muted); margin-top: 8px; padding-top: 10px; border-top: 1px solid var(--border); line-height: 1.5; }
+  .tester { position: fixed; bottom: 12px; left: 12px; background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 6px; box-shadow: var(--shadow-menu); z-index: 200; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; max-width: 320px; }
+  .tester .t-toggle { width: 22px; height: 22px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); cursor: pointer; flex-shrink: 0; }
+  .tester .t-toggle:hover { background: var(--bg); color: var(--text); }
+  .tester select { padding: 4px 6px; border: 1px solid var(--border); border-radius: 4px; font-size: 12px; background: var(--white); max-width: 180px; }
+  .tester button.t-reset { font-size: 11px; padding: 4px 8px; height: auto; border-radius: 4px; }
+  .tester .t-step, .tester .t-banner, .tester .t-label, .tester .t-row { display: none; }
+  .tester.expanded { flex-direction: column; align-items: stretch; max-width: 280px; padding: 10px; gap: 8px; }
+  .tester.expanded .t-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .tester.expanded .t-label { display: inline; font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .tester.expanded .t-step { display: inline; font-size: 11px; color: var(--text-muted); }
+  .tester.expanded .t-banner { display: block; font-size: 11px; color: var(--text-muted); padding-top: 8px; border-top: 1px solid var(--border); line-height: 1.5; }
+  .tester.expanded .t-compact { display: none; }
+  .tester:not(.expanded) .t-row { display: none; }
+  .tester:not(.expanded) .t-banner { display: none; }
 
   [hidden] { display: none !important; }
 </style>
@@ -519,7 +554,7 @@
                 <span class="dropdown-item-icon">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 </span>
-                View bill with deposit
+                View original payment
               </div>
               <div class="dropdown-item" id="deposit-menu-view-block" hidden onclick="viewAvailabilityBlock()">
                 <span class="dropdown-item-icon">
@@ -538,9 +573,9 @@
           Preview bill
         </button>
         <div class="split-btn">
-          <button class="split-btn-main">Process payment</button>
+          <button class="split-btn-main" id="process-payment-btn" onclick="openProcessPayment()">Process payment</button>
           <span class="split-btn-divider"></span>
-          <button class="split-btn-arrow">▾</button>
+          <button class="split-btn-arrow" onclick="openProcessPayment()">▾</button>
         </div>
         <div class="split-btn">
           <button class="split-btn-main">Issue invoice</button>
@@ -861,7 +896,7 @@
 <div class="scrim" id="scrim" onclick="closePanel()"></div>
 
 <aside class="panel" id="panel">
-  <div id="screen-form" style="display: flex; flex-direction: column; height: 100%;">
+  <div id="screen-form" style="display: flex; flex-direction: column; height: 100%; min-height: 0;">
     <div class="panel-header">
       <button class="panel-close" onclick="closePanel()">×</button>
       <span class="panel-title" id="panel-title">Log as deposit</span>
@@ -886,10 +921,10 @@
         <div class="radio-section" id="rs-event">
           <div class="radio-item" id="opt-event" onclick="selectLinkOption('event')">
             <span class="dot"></span>
-            <span class="lbl">Select event start date</span>
+            <span class="lbl" id="lbl-event-radio">Select event start date</span>
           </div>
           <div class="radio-nested" id="nested-event" hidden>
-            <label class="field-label">Event start date<span> *</span></label>
+            <label class="field-label" id="lbl-event-field">Event start date<span> *</span></label>
             <div class="input placeholder" id="date-input" onclick="openCalendar(event)">
               <span id="date-display">DD/MM/YYYY</span>
               <span style="color: var(--text-muted);">📅</span>
@@ -933,6 +968,151 @@
   </div>
 </aside>
 
+<aside class="panel" id="panel-process">
+  <div style="display: flex; flex-direction: column; height: 100%; min-height: 0;">
+    <div class="panel-header">
+      <button class="panel-close" onclick="closeProcessPayment()">×</button>
+      <span class="panel-title">Process payment</span>
+    </div>
+    <div class="panel-body">
+      <div class="pm-cards">
+        <div class="pm-card selected">
+          <span class="pm-radio"></span>
+          <span class="pm-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="20" height="14" rx="2"/><line x1="2" y1="11" x2="22" y2="11"/></svg>
+          </span>
+          <span class="pm-title">Online payment</span>
+          <span class="pm-sub">Use a saved payment method or add new</span>
+        </div>
+        <div class="pm-card">
+          <span class="pm-radio"></span>
+          <span class="pm-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="3" width="14" height="18" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="11" y1="17" x2="13" y2="17"/></svg>
+          </span>
+          <span class="pm-title">Terminal</span>
+          <span class="pm-sub">Charge with Mews Terminal</span>
+        </div>
+        <div class="pm-card">
+          <span class="pm-radio"></span>
+          <span class="pm-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7l9 6 9-6"/><rect x="3" y="5" width="18" height="14" rx="2"/></svg>
+          </span>
+          <span class="pm-title">Payment request</span>
+          <span class="pm-sub">Email link to collect payment</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label field-required">Bill</label>
+        <div class="input placeholder"><span>Select or create a bill</span><span style="color: var(--text-muted);">▾</span></div>
+        <p class="field-helper">This payment will be routed to the selected bill.</p>
+      </div>
+
+      <div class="field">
+        <label class="field-label field-required">Select payment method</label>
+        <div class="input has-value">
+          <span style="display: inline-flex; align-items: center; gap: 8px;">
+            <span style="background: #1A1F71; color: white; font-size: 9px; font-weight: 700; padding: 2px 4px; border-radius: 2px; letter-spacing: 0.5px;">VISA</span>
+            <span>**** 1111</span>
+          </span>
+          <span class="input-clear-chevron"><span>×</span><span>▾</span></span>
+        </div>
+        <p class="field-helper">Use a saved card or add new one</p>
+      </div>
+
+      <div class="input-row cols-2" style="margin-bottom: 18px;">
+        <div>
+          <label class="field-label field-required" style="margin-bottom: 6px;">Amount</label>
+          <div class="input text-input"><input type="text" inputmode="decimal" placeholder=""></div>
+        </div>
+        <div>
+          <label class="field-label field-required" style="margin-bottom: 6px;">Currency</label>
+          <div class="input has-value"><span>EUR</span><span class="input-clear-chevron"><span>×</span><span>▾</span></span></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Notes</label>
+        <div class="input textarea"><textarea placeholder=""></textarea></div>
+      </div>
+
+      <div class="info-banner">
+        <span class="info-banner-icon">i</span>
+        <span class="info-banner-text">This bill has items with consumption date in the future.</span>
+      </div>
+
+      <div class="toggle-section">
+        <div class="toggle-row">
+          <span class="toggle-label">Log as deposit</span>
+          <button class="toggle-switch on" id="pp-toggle" onclick="togglePpDeposit()" aria-label="Log as deposit"><span class="toggle-knob"></span></button>
+        </div>
+        <p class="toggle-hint" id="pp-toggle-hint">Keeps tax reporting accurate until the items are consumed. Switch off only if you need to record a standard payment.</p>
+      </div>
+
+      <div id="pp-deposit-form">
+        <div class="link-options">
+          <div class="radio-section">
+            <div class="radio-item active" id="pp-opt-block" onclick="ppSelectLink('block')">
+              <span class="dot"></span>
+              <span class="lbl">Link to availability block</span>
+            </div>
+            <div class="radio-nested" id="pp-nested-block">
+              <label class="field-label">Existing availability block</label>
+              <div class="input search-input" id="pp-block-input" onclick="ppOpenBlockDropdown(event)">
+                <input type="text" id="pp-block-search" placeholder="Select an availability block" autocomplete="off" oninput="ppFilterBlocks(this.value)">
+                <span class="chevron">▾</span>
+              </div>
+            </div>
+          </div>
+          <div class="radio-section">
+            <div class="radio-item" id="pp-opt-event" onclick="ppSelectLink('event')">
+              <span class="dot"></span>
+              <span class="lbl">Select consumption date</span>
+            </div>
+            <div class="radio-nested" id="pp-nested-event" hidden>
+              <label class="field-label">Consumption date<span> *</span></label>
+              <div class="input placeholder" id="pp-date-input" onclick="ppOpenCalendar(event)">
+                <span id="pp-date-display">DD/MM/YYYY</span>
+                <span style="color: var(--text-muted);">📅</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field" id="pp-field-description">
+          <label class="field-label">Description</label>
+          <div class="input text-input"><input type="text" id="pp-description" placeholder="Add a name or a note for the deposit"></div>
+        </div>
+
+        <div class="panel-divider"></div>
+
+        <div class="balance-row">
+          <span class="lbl">Payment balance</span>
+          <span class="val">€ 300.00</span>
+        </div>
+
+        <div class="error-banner" id="pp-error-banner" hidden>
+          <span class="error-banner-icon">!</span>
+          <span class="error-banner-text">The total amount exceeds the payment balance.</span>
+        </div>
+
+        <div class="input-row cols-2" style="margin-bottom: 6px;">
+          <label class="field-label" style="margin-bottom: 0;">Amount</label>
+          <label class="field-label" style="margin-bottom: 0;">Expect tax rate</label>
+        </div>
+        <div id="pp-vat-rows"></div>
+        <p class="field-helper" id="pp-vat-helper" style="margin-top: 8px;">Auto-calculated from payment amount</p>
+
+        <button class="add-vat" id="pp-add-vat-btn" onclick="ppAddVatRow()"><span class="add-vat-icon">+</span> Add additional tax rate</button>
+      </div>
+    </div>
+    <div class="panel-footer">
+      <button class="btn" onclick="closeProcessPayment()">Cancel</button>
+      <button class="btn btn-primary" id="pp-submit" onclick="submitProcessPayment()">Submit</button>
+    </div>
+  </div>
+</aside>
+
 <div class="popover calendar-popover" id="calendar-popover" hidden>
   <div class="calendar-header">
     <button class="cal-nav" onclick="calNav(-1)">‹</button>
@@ -966,7 +1146,17 @@
   <button class="toast-close" onclick="hideToast()">×</button>
 </div>
 
-<aside class="tester">
+<aside class="tester" id="tester">
+  <div class="t-compact" style="display: inline-flex; align-items: center; gap: 6px;">
+    <select id="flow-select" onchange="switchFlow(this.value)">
+      <option value="v11">Set event start date</option>
+      <option value="v12">Multiple VATs</option>
+      <option value="v14">Link to availability block</option>
+      <option value="v20">Process payment</option>
+    </select>
+    <button class="btn t-reset" onclick="resetFlow()">Reset</button>
+    <span class="t-toggle" onclick="toggleTester()" title="Expand">▴</span>
+  </div>
   <div class="t-row">
     <span class="t-label">Entry</span>
     <select id="entry-select" onchange="switchEntry(this.value)">
@@ -975,15 +1165,17 @@
   </div>
   <div class="t-row">
     <span class="t-label">Flow</span>
-    <select id="flow-select" onchange="switchFlow(this.value)">
+    <select id="flow-select-2" onchange="switchFlow(this.value); document.getElementById('flow-select').value = this.value;">
       <option value="v11">Set event start date</option>
       <option value="v12">Multiple VATs</option>
       <option value="v14">Link to availability block</option>
+      <option value="v20">Process payment</option>
     </select>
   </div>
   <div class="t-row">
     <span class="t-step" id="step-display">Step: ready</span>
     <button class="btn t-reset" onclick="resetFlow()">Reset</button>
+    <span class="t-toggle" onclick="toggleTester()" title="Collapse">▾</span>
   </div>
   <div class="t-banner" id="flow-banner">V1.1 — Click the ⋮ next to the €300 payment, then "Log as deposit". Pick a date, write a description, optionally change the tax rate, then Log as deposit.</div>
 </aside>
@@ -1035,6 +1227,14 @@
       multiVat: true,
       successText: "€300.00 has been logged as a deposit against the selected availability block.",
       goToReportAfter: false
+    },
+    v20: {
+      banner: "V2.0 — Click 'Process payment' on the bill (right side). Panel includes payment fields + the deposit toggle (ON by default). Switch the toggle OFF to hide the deposit form section.",
+      linkOptions: ["block", "event"],
+      defaultLink: "block",
+      multiVat: false,
+      successText: "Payment of €300.00 has been processed and logged as a deposit.",
+      goToReportAfter: false
     }
   };
 
@@ -1052,6 +1252,289 @@
   let selectedReservation = null;
   let selectedBlock = null;
   let userDescription = "";
+
+  function applyEventDateLabel() {
+    const useConsumption = currentFlow === "v14";
+    const radioLbl = document.getElementById("lbl-event-radio");
+    const fieldLbl = document.getElementById("lbl-event-field");
+    if (radioLbl) radioLbl.textContent = useConsumption ? "Select consumption date" : "Select event start date";
+    if (fieldLbl) fieldLbl.innerHTML = (useConsumption ? "Consumption date" : "Event start date") + "<span> *</span>";
+  }
+
+  function toggleTester() {
+    const t = document.getElementById("tester");
+    t.classList.toggle("expanded");
+  }
+
+  // === Process payment flow (v20) ===
+  let ppDepositOn = true;
+  let ppLinkMode = "block";
+  let ppVatRows = [{ amount: null, rate: nextRate(0) }];
+  let ppSelectedDate = null;
+  let ppSelectedBlock = null;
+  let ppActiveRateRow = null;
+  let pickerContext = "main"; // "main" | "pp" — determines which form a popover targets
+
+  function ppNonLastSum() { return ppVatRows.slice(0, -1).reduce((s, r) => s + (parseFloat(r.amount) || 0), 0); }
+  function ppLastAmt() { return PAYMENT - ppNonLastSum(); }
+
+  function openProcessPayment() {
+    closeAllMenus();
+    closePanel(true);
+    // Reset state
+    ppDepositOn = true;
+    ppLinkMode = "block";
+    ppVatRows = [{ amount: null, rate: nextRate(0) }];
+    ppSelectedDate = null;
+    ppSelectedBlock = null;
+    document.getElementById("pp-toggle").classList.add("on");
+    document.getElementById("pp-deposit-form").style.display = "";
+    const ppHint = document.getElementById("pp-toggle-hint");
+    ppHint.textContent = "Keeps tax reporting accurate until the items are consumed. Switch off only if you need to record a standard payment.";
+    ppHint.style.display = "";
+    document.getElementById("pp-submit").textContent = "Submit";
+    document.getElementById("pp-opt-block").classList.add("active");
+    document.getElementById("pp-opt-event").classList.remove("active");
+    document.getElementById("pp-nested-block").hidden = false;
+    document.getElementById("pp-nested-event").hidden = true;
+    document.getElementById("pp-description").value = "";
+    document.getElementById("pp-block-search").value = "";
+    document.getElementById("pp-date-display").textContent = "DD/MM/YYYY";
+    document.getElementById("pp-date-input").classList.add("placeholder");
+    document.getElementById("pp-date-input").classList.remove("has-value");
+    ppRenderVatRows();
+    ppUpdateErrorState();
+
+    document.getElementById("panel-process").classList.add("open");
+    document.getElementById("scrim").classList.add("show");
+    setStep("Process payment panel open");
+  }
+
+  function closeProcessPayment() {
+    document.getElementById("panel-process").classList.remove("open");
+    document.getElementById("scrim").classList.remove("show");
+    closeAllMenus();
+    setStep("Process payment panel closed");
+  }
+
+  function togglePpDeposit() {
+    ppDepositOn = !ppDepositOn;
+    const tog = document.getElementById("pp-toggle");
+    tog.classList.toggle("on", ppDepositOn);
+    document.getElementById("pp-deposit-form").style.display = ppDepositOn ? "" : "none";
+    const hint = document.getElementById("pp-toggle-hint");
+    if (hint) {
+      hint.textContent = "Keeps tax reporting accurate until the items are consumed. Switch off only if you need to record a standard payment.";
+      hint.style.display = ppDepositOn ? "" : "none";
+    }
+    ppUpdateErrorState();
+    setStep("Process payment toggle: " + (ppDepositOn ? "ON (deposit)" : "OFF (standard payment)"));
+  }
+
+  function ppSelectLink(mode) {
+    ppLinkMode = mode;
+    document.getElementById("pp-opt-block").classList.toggle("active", mode === "block");
+    document.getElementById("pp-opt-event").classList.toggle("active", mode === "event");
+    document.getElementById("pp-nested-block").hidden = mode !== "block";
+    document.getElementById("pp-nested-event").hidden = mode !== "event";
+    ppUpdateErrorState();
+    setStep("Process payment link mode: " + mode);
+  }
+
+  // Multi-VAT for PP
+  function ppRenderVatRows() {
+    const wrap = document.getElementById("pp-vat-rows");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    ppVatRows.forEach((row, i) => {
+      const isLast = i === ppVatRows.length - 1;
+      const last = ppLastAmt();
+      const div = document.createElement("div");
+      div.className = "vat-row";
+      const amountInner = isLast
+        ? '<span class="ccy">€</span><span class="val">' + last.toFixed(0) + '</span>'
+        : '<span class="ccy">€</span><input data-i="' + i + '" type="text" inputmode="decimal" value="' + (row.amount === null ? '' : row.amount) + '" placeholder="0">';
+      const canDel = ppVatRows.length > 1;
+      const lockedClass = isLast ? " locked" : "";
+      div.innerHTML =
+        '<div class="vat-amount' + lockedClass + '">' + amountInner + '</div>' +
+        '<div class="vat-rate" data-row="' + i + '" onclick="ppOpenRatePopover(event, ' + i + ')"><span>' + row.rate + '%</span><span class="input-clear-chevron"><span>×</span><span>▾</span></span></div>' +
+        '<button class="vat-del" data-del="' + i + '" ' + (canDel ? '' : 'disabled') + ' aria-label="Remove">×</button>';
+      wrap.appendChild(div);
+    });
+    wrap.querySelectorAll('input[data-i]').forEach(el => {
+      el.addEventListener('input', e => {
+        const i = parseInt(e.target.dataset.i, 10);
+        ppVatRows[i].amount = e.target.value;
+        const allRows = wrap.querySelectorAll('.vat-row');
+        const lastRow = allRows[allRows.length - 1];
+        if (lastRow) {
+          const lastValEl = lastRow.querySelector('.val');
+          if (lastValEl) lastValEl.textContent = ppLastAmt().toFixed(0);
+        }
+        ppUpdateErrorState();
+      });
+    });
+    wrap.querySelectorAll('button[data-del]').forEach(el => {
+      el.addEventListener('click', e => {
+        const i = parseInt(e.currentTarget.dataset.del, 10);
+        if (ppVatRows.length > 1) {
+          ppVatRows.splice(i, 1);
+          ppRenderVatRows();
+          ppUpdateErrorState();
+          setStep("(pp) vat row removed (" + ppVatRows.length + " rows)");
+        }
+      });
+    });
+    const helper = document.getElementById("pp-vat-helper");
+    if (helper) helper.textContent = ppVatRows.length === 1 ? "Auto-calculated from payment amount" : "Last row balances automatically";
+  }
+
+  function ppAddVatRow() {
+    ppVatRows.push({ amount: null, rate: nextRate(ppVatRows.length) });
+    ppRenderVatRows();
+    setStep("(pp) vat row added (" + ppVatRows.length + " rows)");
+  }
+
+  function ppOpenRatePopover(e, rowIndex) {
+    e.stopPropagation();
+    pickerContext = "pp";
+    ppActiveRateRow = rowIndex;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pop = document.getElementById("rate-popover");
+    pop.style.left = rect.left + "px";
+    pop.style.top = (rect.bottom + 4) + "px";
+    pop.style.width = rect.width + "px";
+    Array.from(pop.children).forEach((el, idx) => {
+      el.classList.toggle("selected", RATES[idx] === ppVatRows[rowIndex].rate);
+    });
+    pop.hidden = false;
+    setStep("(pp) tax rate menu open");
+  }
+
+  function ppUpdateErrorState() {
+    const sum = ppNonLastSum();
+    const overAllocated = sum > PAYMENT && ppVatRows.length > 1;
+    const banner = document.getElementById("pp-error-banner");
+    if (banner) banner.hidden = !overAllocated;
+    const submit = document.getElementById("pp-submit");
+    const missingDate = ppDepositOn && ppLinkMode === "event" && !ppSelectedDate;
+    const missingBlock = ppDepositOn && ppLinkMode === "block" && ppSelectedBlock === null;
+    if (submit) submit.disabled = overAllocated || missingDate || missingBlock;
+    const wrap = document.getElementById("pp-vat-rows");
+    if (!wrap) return;
+    const rows = wrap.querySelectorAll('.vat-row');
+    rows.forEach((rowEl, i) => {
+      const isLast = i === ppVatRows.length - 1;
+      const showError = !isLast && overAllocated;
+      const amountEl = rowEl.querySelector('.vat-amount');
+      if (!amountEl) return;
+      amountEl.classList.toggle('error', showError);
+      let errorIcon = amountEl.querySelector('.vat-error-icon');
+      if (showError && !errorIcon) {
+        const icon = document.createElement('span');
+        icon.className = 'vat-error-icon';
+        icon.textContent = '!';
+        amountEl.appendChild(icon);
+      } else if (!showError && errorIcon) {
+        errorIcon.remove();
+      }
+    });
+  }
+
+  // Calendar — shared popover with pp context
+  function ppOpenCalendar(e) {
+    e.stopPropagation();
+    pickerContext = "pp";
+    if (ppSelectedDate) {
+      calMonth = ppSelectedDate.month;
+      calYear = ppSelectedDate.year;
+    }
+    buildCalendar();
+    const rect = document.getElementById("pp-date-input").getBoundingClientRect();
+    const pop = document.getElementById("calendar-popover");
+    pop.style.left = rect.left + "px";
+    pop.style.top = (rect.bottom + 4) + "px";
+    pop.hidden = false;
+    setStep("(pp) calendar open");
+  }
+
+  // Block dropdown — shared popover with pp context
+  function ppOpenBlockDropdown(e) {
+    e.stopPropagation();
+    pickerContext = "pp";
+    if (!document.getElementById("block-popover").hidden) return;
+    const inputField = document.getElementById("pp-block-search");
+    const rect = document.getElementById("pp-block-input").getBoundingClientRect();
+    const pop = document.getElementById("block-popover");
+    pop.style.left = rect.left + "px";
+    pop.style.top = (rect.bottom + 4) + "px";
+    pop.style.width = rect.width + "px";
+    ppRenderBlockItems(inputField.value);
+    pop.hidden = false;
+    setTimeout(() => { inputField.focus(); inputField.select(); }, 0);
+    setStep("(pp) block picker open");
+  }
+
+  function ppFilterBlocks(query) {
+    pickerContext = "pp";
+    if (document.getElementById("block-popover").hidden) {
+      document.getElementById("block-popover").hidden = false;
+    }
+    ppRenderBlockItems(query);
+  }
+
+  function ppRenderBlockItems(query) {
+    const pop = document.getElementById("block-popover");
+    pop.innerHTML = "";
+    const q = (query || "").toLowerCase().trim();
+    const matches = BLOCKS.map((b, i) => Object.assign({}, b, { idx: i })).filter(b => !q || b.name.toLowerCase().includes(q));
+    const suggested = matches.filter(b => b.section === "suggested");
+    const future = matches.filter(b => b.section === "future");
+    const buildSection = (label, items) => {
+      if (items.length === 0) return null;
+      const sec = document.createElement("div");
+      sec.className = "popover-section";
+      const header = document.createElement("div");
+      header.className = "popover-section-header";
+      header.textContent = label;
+      sec.appendChild(header);
+      items.forEach(b => {
+        const item = document.createElement("div");
+        item.className = "block-item" + (b.idx === ppSelectedBlock ? " selected" : "");
+        item.textContent = b.name;
+        item.addEventListener("click", () => ppPickBlock(b.idx));
+        sec.appendChild(item);
+      });
+      return sec;
+    };
+    const s1 = buildSection("Suggested", suggested);
+    const s2 = buildSection("Availability blocks with future date", future);
+    if (s1) pop.appendChild(s1);
+    if (s2) pop.appendChild(s2);
+    if (!s1 && !s2) {
+      pop.innerHTML = '<div class="block-item" style="color: var(--text-muted); cursor: default;">No availability blocks match</div>';
+    }
+  }
+
+  function ppPickBlock(idx) {
+    ppSelectedBlock = idx;
+    document.getElementById("pp-block-search").value = BLOCKS[idx].name;
+    document.getElementById("block-popover").hidden = true;
+    ppUpdateErrorState();
+    setStep("(pp) availability block: " + BLOCKS[idx].name);
+  }
+
+  function submitProcessPayment() {
+    closeProcessPayment();
+    showToast(
+      ppDepositOn ? "Deposit logged" : "Payment processed",
+      ppDepositOn
+        ? "Payment of €300.00 has been processed and logged as a deposit."
+        : "Payment of €300.00 has been processed."
+    );
+    setStep("Process payment submitted");
+  }
 
   function $(id) { return document.getElementById(id); }
   function setStep(text) { $("step-display").textContent = "Step: " + text; }
@@ -1114,14 +1597,20 @@
       $("payments-menu").hidden = true;
       $("deposit-menu").hidden = true;
     }
-    if (!e.target.closest(".calendar-popover") && !e.target.closest("#date-input")) {
+    if (!e.target.closest(".calendar-popover") && !e.target.closest("#date-input") && !e.target.closest("#pp-date-input")) {
       $("calendar-popover").hidden = true;
     }
     if (!e.target.closest(".rate-popover") && !e.target.closest(".vat-rate")) {
       $("rate-popover").hidden = true;
     }
-    if (!e.target.closest(".block-popover") && !e.target.closest("#block-input")) {
-      if (!$("block-popover").hidden) closeBlockDropdown();
+    if (!e.target.closest(".block-popover") && !e.target.closest("#block-input") && !e.target.closest("#pp-block-input")) {
+      if (!$("block-popover").hidden) {
+        if (pickerContext === "pp") {
+          $("block-popover").hidden = true;
+        } else {
+          closeBlockDropdown();
+        }
+      }
     }
   });
 
@@ -1131,6 +1620,7 @@
     $("panel").classList.remove("edit-mode");
     $("panel-title").textContent = "Log as deposit";
     $("primary-cta").textContent = "Log as deposit";
+    applyEventDateLabel();
     const cfg = flowConfigs[currentFlow];
     $("link-options").hidden = false;
     $("rs-event").hidden = !cfg.linkOptions.includes("event");
@@ -1299,6 +1789,7 @@
 
   function openBlockDropdown(e) {
     e.stopPropagation();
+    pickerContext = "main";
     if (!$("block-popover").hidden) return;
     const inputField = $("block-search");
     const rect = $("block-input").getBoundingClientRect();
@@ -1481,6 +1972,7 @@
 
   function openCalendar(e) {
     e.stopPropagation();
+    pickerContext = "main";
     if (selectedDate) {
       calMonth = selectedDate.month;
       calYear = selectedDate.year;
@@ -1535,9 +2027,19 @@
   }
 
   function pickDate(d) {
-    selectedDate = { day: d, month: calMonth, year: calYear };
     const dd = String(d).padStart(2, '0');
     const mm = String(calMonth + 1).padStart(2, '0');
+    if (pickerContext === "pp") {
+      ppSelectedDate = { day: d, month: calMonth, year: calYear };
+      $("pp-date-display").textContent = dd + "/" + mm + "/" + calYear;
+      $("pp-date-input").classList.remove("placeholder");
+      $("pp-date-input").classList.add("has-value");
+      $("calendar-popover").hidden = true;
+      ppUpdateErrorState();
+      setStep("(pp) date selected: " + dd + "/" + mm + "/" + calYear);
+      return;
+    }
+    selectedDate = { day: d, month: calMonth, year: calYear };
     $("date-display").textContent = dd + "/" + mm + "/" + calYear;
     $("date-input").classList.remove("placeholder");
     $("date-input").classList.add("has-value");
@@ -1637,6 +2139,7 @@
   function openRatePopover(e, rowIndex) {
     if (editMode) return;
     e.stopPropagation();
+    pickerContext = "main";
     activeRateRow = rowIndex;
     const rect = e.currentTarget.getBoundingClientRect();
     const pop = $("rate-popover");
@@ -1651,6 +2154,15 @@
   }
 
   function pickRate(rate) {
+    if (pickerContext === "pp") {
+      if (ppActiveRateRow === null) return;
+      ppVatRows[ppActiveRateRow].rate = rate;
+      ppRenderVatRows();
+      ppUpdateErrorState();
+      $("rate-popover").hidden = true;
+      setStep("(pp) tax rate set: " + rate + "%");
+      return;
+    }
     if (activeRateRow === null) return;
     vatRows[activeRateRow].rate = rate;
     renderVatRows();
@@ -1676,6 +2188,8 @@
 
   function closePanel(skipStep) {
     $("panel").classList.remove("open");
+    const pp = document.getElementById("panel-process");
+    if (pp) pp.classList.remove("open");
     $("scrim").classList.remove("show");
     closeAllMenus();
     if (!skipStep) setStep("panel closed");
@@ -1782,10 +2296,16 @@
   function switchFlow(flow) {
     currentFlow = flow;
     $("flow-banner").textContent = flowConfigs[flow].banner;
+    applyEventDateLabel();
+    const fs1 = document.getElementById("flow-select");
+    const fs2 = document.getElementById("flow-select-2");
+    if (fs1) fs1.value = flow;
+    if (fs2) fs2.value = flow;
     resetFlow();
   }
 
   renderVatRows();
+  applyEventDateLabel();
   setStep("ready");
 </script>
 
