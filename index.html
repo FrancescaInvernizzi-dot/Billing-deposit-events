@@ -111,9 +111,9 @@
   .deposit-row-chevron { width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); border-radius: 4px; cursor: pointer; }
   .deposit-row-chevron:hover { background: var(--bg); color: var(--text); }
 
-  .bill-side-actions { display: flex; flex-direction: column; gap: 10px; min-width: 200px; align-items: stretch; padding-top: 20px; padding-left: 24px; border-left: 1px solid var(--border); margin-left: 24px; }
+  .bill-side-actions { display: flex; flex-direction: column; gap: 10px; min-width: 200px; align-items: stretch; padding-top: 20px; padding-left: 24px; padding-right: 24px; border-left: 1px solid var(--border); margin-left: 24px; }
   .split-btn { display: flex; align-items: center; height: 36px; border: 1px solid var(--border); border-radius: 8px; background: var(--white); overflow: hidden; }
-  .split-btn-main { flex: 1; padding: 0 14px; font-size: 13px; height: 100%; display: inline-flex; align-items: center; gap: 6px; }
+  .split-btn-main { flex: 1; padding: 0 14px; font-size: 13px; height: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; }
   .split-btn-main:hover { background: var(--bg); }
   .split-btn-divider { width: 1px; background: var(--border); height: 100%; }
   .split-btn-arrow { width: 32px; height: 100%; display: inline-flex; align-items: center; justify-content: center; color: var(--text-muted); }
@@ -250,6 +250,18 @@
   .btn-primary { background: var(--indigo); color: var(--white); border-color: var(--indigo); }
   .btn-primary:hover:not(:disabled) { background: var(--indigo-dark); border-color: var(--indigo-dark); }
   .btn-primary:disabled { background: #C7C9D1; border-color: #C7C9D1; color: var(--white); cursor: not-allowed; opacity: 1; }
+  .btn-danger { background: #DC2626; color: var(--white); border-color: #DC2626; }
+  .btn-danger:hover { background: #B91C1C; border-color: #B91C1C; }
+
+  .modal-scrim { position: fixed; inset: 0; background: rgba(15,15,15,0.32); display: none; align-items: center; justify-content: center; z-index: 400; }
+  .modal-scrim.show { display: flex; }
+  .modal-dialog { background: var(--white); border-radius: 12px; box-shadow: var(--shadow-menu); width: 440px; max-width: calc(100vw - 32px); padding: 24px; }
+  .modal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+  .modal-title { font-size: 18px; font-weight: 600; color: var(--text); }
+  .modal-close { width: 28px; height: 28px; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--white); color: var(--text); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px; line-height: 1; flex-shrink: 0; }
+  .modal-close:hover { background: var(--bg); }
+  .modal-body { font-size: 14px; color: var(--text); line-height: 1.5; margin-bottom: 24px; }
+  .modal-footer { display: flex; justify-content: space-between; gap: 8px; }
 
   .popover { position: fixed; background: var(--white); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow-menu); z-index: 300; }
 
@@ -489,7 +501,7 @@
   </div>
 
   <div class="bill-card">
-    <div style="display: grid; grid-template-columns: 1fr 240px;">
+    <div style="display: grid; grid-template-columns: 1fr 280px;">
       <div>
         <div class="bill-header" style="border-bottom: 1px solid var(--border);">
           <div class="bill-header-title">Open bill (Tom Hanks)</div>
@@ -549,6 +561,12 @@
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                 </span>
                 Edit deposit
+              </div>
+              <div class="dropdown-item" onclick="cancelDeposit()">
+                <span class="dropdown-item-icon">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
+                </span>
+                Cancel deposit
               </div>
               <div class="dropdown-item" onclick="viewBillWithDeposit()">
                 <span class="dropdown-item-icon">
@@ -968,6 +986,23 @@
   </div>
 </aside>
 
+<div class="modal-scrim" id="cancel-deposit-modal" onclick="if(event.target===this)closeCancelDialog()">
+  <div class="modal-dialog" role="dialog" aria-labelledby="cancel-deposit-title">
+    <div class="modal-header">
+      <span class="modal-title" id="cancel-deposit-title">Cancel deposit</span>
+      <button class="modal-close" onclick="closeCancelDialog()">×</button>
+    </div>
+    <div class="modal-body">The deposit will be cancelled and the original payment will be returned to the open bill.</div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeCancelDialog()">Go back</button>
+      <button class="btn btn-danger" onclick="confirmCancelDeposit()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2"/></svg>
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
 <aside class="panel" id="panel-process">
   <div style="display: flex; flex-direction: column; height: 100%; min-height: 0;">
     <div class="panel-header">
@@ -1038,7 +1073,7 @@
 
       <div class="info-banner">
         <span class="info-banner-icon">i</span>
-        <span class="info-banner-text">This bill has items with consumption date in the future.</span>
+        <span class="info-banner-text">This bill has no items.</span>
       </div>
 
       <div class="toggle-section">
@@ -1150,8 +1185,8 @@
   <div class="t-compact" style="display: inline-flex; align-items: center; gap: 6px;">
     <select id="flow-select" onchange="switchFlow(this.value)">
       <option value="v11">Set event start date</option>
-      <option value="v12">Multiple VATs</option>
       <option value="v14">Link to availability block</option>
+      <option value="v12">Multiple VATs</option>
       <option value="v20">Process payment</option>
     </select>
     <button class="btn t-reset" onclick="resetFlow()">Reset</button>
@@ -1167,8 +1202,8 @@
     <span class="t-label">Flow</span>
     <select id="flow-select-2" onchange="switchFlow(this.value); document.getElementById('flow-select').value = this.value;">
       <option value="v11">Set event start date</option>
-      <option value="v12">Multiple VATs</option>
       <option value="v14">Link to availability block</option>
+      <option value="v12">Multiple VATs</option>
       <option value="v20">Process payment</option>
     </select>
   </div>
@@ -1221,10 +1256,10 @@
       goToReportAfter: false
     },
     v14: {
-      banner: "V1.4 — 'Link to availability block' is selected by default. Pick a block from the Suggested or future-date sections. Multi-VAT supported. After save, the deposit row's ⋮ menu shows 'View availability block'.",
+      banner: "V1.4 — 'Link to availability block' is selected by default. Pick a block from the Suggested or future-date sections. After save, the deposit row's ⋮ menu shows 'View availability block'.",
       linkOptions: ["block", "event"],
       defaultLink: "block",
-      multiVat: true,
+      multiVat: false,
       successText: "€300.00 has been logged as a deposit against the selected availability block.",
       goToReportAfter: false
     },
@@ -1958,6 +1993,29 @@
     setStep("viewing availability block");
   }
 
+  function cancelDeposit() {
+    closeAllMenus();
+    $("cancel-deposit-modal").classList.add("show");
+    setStep("cancel deposit dialog open");
+  }
+
+  function closeCancelDialog() {
+    $("cancel-deposit-modal").classList.remove("show");
+    setStep("cancel deposit dialog closed");
+  }
+
+  function confirmCancelDeposit() {
+    $("cancel-deposit-modal").classList.remove("show");
+    closePanel(true);
+    $("deposit-row-wrap").hidden = true;
+    $("original-payment-row").hidden = false;
+    lastDeposit = null;
+    editMode = false;
+    $("panel").classList.remove("edit-mode");
+    showToast("Deposit canceled", "The deposit has been canceled and the original payment has been restored.");
+    setStep("deposit canceled");
+  }
+
   function backToBill() {
     $("entry-closed-bill").hidden = true;
     $("entry-availability-block").hidden = true;
@@ -2258,6 +2316,7 @@
   function resetFlow() {
     closePanel(true);
     closeAllMenus();
+    $("cancel-deposit-modal").classList.remove("show");
     $("entry-availability-block").hidden = true;
     $("entry-closed-bill").hidden = true;
     $("topnav-main").hidden = false;
